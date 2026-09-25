@@ -272,6 +272,12 @@ h1, h2, h3, h4 { margin: 0; font-weight: 800; letter-spacing: -0.02em; }
 .suggest {
   text-align: left; color: var(--green-dark); font-weight: 650; display: flex; align-items: center; gap: 10px;
 }
+.speak-btn {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+  background: transparent; border: 0; padding: 0; color: var(--ink-60);
+  font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.speak-btn:hover { color: var(--green-dark); }
 
 .modal-back { position: fixed; inset: 0; background: rgba(28, 26, 23, 0.48); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
 @media (min-width: 768px) { .modal-back { align-items: center; } }

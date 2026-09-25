@@ -482,15 +482,21 @@ def complete(task: str, system: str, user_content, context: dict) -> str:
     if task == "structure_update":
         return json.dumps(structured_for(context.get("filename", "") or text))
     if task == "classify_question":
-        if CLINICAL_PATTERNS.search(text):
+        latest = text.split("Latest question:")[-1] if "Latest question:" in text else text
+        if CLINICAL_PATTERNS.search(latest):
             return json.dumps({"route": "clinical", "reason": "asks for medical/dosing advice"})
-        if re.search(r"\b(weather|joke|football|recipe|news|bitcoin)\b", text, re.I):
+        if re.search(r"\b(weather|joke|football|recipe|news|bitcoin)\b", latest, re.I):
             return json.dumps({"route": "out_of_scope", "reason": "not about the care record"})
         record_terms = (r"\b(doctor|letter|document|appointment|medication|plan|update|said|when|who|"
                         r"instruction|dose|clinic|follow.?up|blood pressure|weigh|his|her|he|she|"
                         r"today|tonight|due|task|last)\b")
-        if re.search(r"\b(how (do|to)|tips|advice|prevent)\b", text, re.I) and not re.search(
-                record_terms, text, re.I):
+        followup = re.search(
+            r"\b(that|those|them|this|the (dose|tasks?|one|meds?|appointment)|what about|how about)\b",
+            latest, re.I)
+        if followup and context.get("history"):
+            return json.dumps({"route": "record_fact", "reason": "follow-up to the care conversation"})
+        if re.search(r"\b(how (do|to)|tips|advice|prevent)\b", latest, re.I) and not re.search(
+                record_terms, latest, re.I):
             return json.dumps({"route": "general_care", "reason": "general caregiving question"})
         return json.dumps({"route": "record_fact", "reason": "asks about the care record"})
     if task == "answer":
@@ -511,9 +517,11 @@ def complete(task: str, system: str, user_content, context: dict) -> str:
             })
         if not chunks:
             return json.dumps({"answer": "I could not find this in the approved care records. If you can, upload the relevant document or ask the person who knows.", "citations": []})
-        q_toks = set(re.findall(r"\w+", text.lower())) - {
+        hist = " ".join(m.get("content", "") for m in context.get("history", []))
+        q_toks = set(re.findall(r"\w+", (text + " " + hist).lower())) - {
             "what", "is", "his", "her", "the", "a", "an", "about", "did", "in", "last",
             "of", "and", "to", "for", "on", "was", "were", "how", "do", "we", "i",
+            "family", "ihtama", "recent", "conversation", "latest", "question",
         }
         relevant = [c for c in chunks if q_toks & set(re.findall(r"\w+", c["text"].lower()))]
         if not relevant:
@@ -521,7 +529,8 @@ def complete(task: str, system: str, user_content, context: dict) -> str:
         chunks = relevant
         lines, citations = [], []
         for c in chunks[:3]:
-            snippet = c["text"][:220].strip().rstrip(",;")
+            limit = 800 if c.get("source_type") == "care_plan" or c.get("doc_name") == "Care plan" else 220
+            snippet = c["text"][:limit].strip().rstrip(",;")
             lines.append(f"{snippet} [{c['doc_name']}, p.{c['page']}]")
             citations.append({"doc_id": c["doc_id"], "doc_name": c["doc_name"], "page": c["page"], "quote": snippet[:120]})
         return json.dumps({"answer": "From the approved care record: " + " ".join(lines), "citations": citations})

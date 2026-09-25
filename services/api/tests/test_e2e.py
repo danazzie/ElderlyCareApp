@@ -281,6 +281,30 @@ def test_ask_injection_blocked(owner, circle_id):
     assert body["route"] == "blocked"
 
 
+def test_ask_followup_uses_chat_memory(owner, circle_id):
+    client.post(f"/api/circles/{circle_id}/medications", headers=owner,
+                json={"name": "Donepezil", "dose": "5 mg", "schedule": "night"})
+    client.post(f"/api/circles/{circle_id}/tasks", headers=owner,
+                json={"title": "Give evening tablets", "due": "tonight"})
+    first = client.post(f"/api/circles/{circle_id}/ask", headers=owner,
+                        json={"question": "What's due tonight?"})
+    assert first.status_code == 200
+    r = client.post(f"/api/circles/{circle_id}/ask", headers=owner,
+                    json={"question": "What about the tasks?"})
+    body = r.json()
+    assert body["route"] == "record_fact"
+    assert "evening tablets" in body["answer"].lower(), body["answer"]
+
+
+def test_ask_transcribe_voice(owner, circle_id):
+    audio = SAMPLES / "Clear Audio.m4a"
+    with audio.open("rb") as f:
+        r = client.post(f"/api/circles/{circle_id}/ask/transcribe", headers=owner,
+                        files={"audio": ("Clear Audio.m4a", f, "audio/m4a")})
+    assert r.status_code == 200, r.text
+    assert "breakfast" in r.json()["transcript"].lower()
+
+
 def test_ask_clear_messages(owner, circle_id):
     client.post(f"/api/circles/{circle_id}/ask", headers=owner,
                 json={"question": "What was the blood pressure in the last update?"})
