@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     langchain_project: str = "ihtama"
 
     class Config:
-        env_file = ".env"
+        env_file = str(REPO_ROOT / ".env")
         extra = "ignore"
 
 

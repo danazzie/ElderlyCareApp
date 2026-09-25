@@ -1,0 +1,23 @@
+# Render Blueprint — public demo URL for Ihtama.
+# https://dashboard.render.com/blueprints
+services:
+  - type: web
+    name: ihtama
+    runtime: docker
+    plan: free
+    dockerfilePath: ./infra/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: LANGCHAIN_TRACING_V2
+        value: "true"
+      - key: LANGCHAIN_API_KEY
+        sync: false
+      - key: LANGCHAIN_PROJECT
+        value: ihtama
+      - key: SECRET_KEY
+        generateValue: true

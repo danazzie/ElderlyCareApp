@@ -93,8 +93,8 @@ export default function DocumentReview() {
 
   const pending = doc.status === "needs_review" || doc.status === "needs_clarification";
   const issues = doc.review_request?.validation_issues ?? [];
-  const isImage = /\.(jpe?g|png|webp)$/i.test(doc.filename);
   const fileUrl = `/api/documents/${doc.id}/file`;
+  const previewPage = doc.items?.find((i) => i.source_page)?.source_page ?? 1;
 
   const submit = async (action: string) => {
     setBusy(true); setError("");
@@ -129,20 +129,12 @@ export default function DocumentReview() {
       )}
 
       <div className="grid cols-2">
-        <div className="card" style={{ minHeight: 320 }}>
-          <b>Source document</b>
-          <div style={{ marginTop: 10 }}>
-            {isImage ? (
-              <AuthedImage url={fileUrl} />
-            ) : (
-              <a className="btn ghost" href="#" onClick={async (e) => {
-                e.preventDefault();
-                const r = await fetch(fileUrl, { headers: { Authorization: `Bearer ${getToken()}` } });
-                const blob = await r.blob();
-                window.open(URL.createObjectURL(blob), "_blank");
-              }}><Icon name="file" size={16} /> Open PDF</a>
-            )}
+        <div className="card source-pane">
+          <div className="spread">
+            <b>Source document</b>
+            <span className="tiny">page {previewPage}</span>
           </div>
+          <AuthedPreview url={fileUrl} filename={doc.filename} page={previewPage} />
         </div>
 
         <div className="stack">
@@ -177,11 +169,45 @@ export default function DocumentReview() {
   );
 }
 
-function AuthedImage({ url }: { url: string }) {
+function AuthedPreview({ url, filename, page }: { url: string; filename: string; page?: number }) {
   const [src, setSrc] = useState("");
+  const [error, setError] = useState("");
+  const isImage = /\.(jpe?g|png|webp)$/i.test(filename);
+
   useEffect(() => {
+    let objectUrl = "";
+    setSrc("");
+    setError("");
     fetch(url, { headers: { Authorization: `Bearer ${getToken()}` } })
-      .then((r) => r.blob()).then((b) => setSrc(URL.createObjectURL(b)));
-  }, [url]);
-  return src ? <img src={src} style={{ width: "100%", borderRadius: 12 }} /> : <span className="spin dark" />;
+      .then((r) => {
+        if (!r.ok) throw new Error("Could not load the file");
+        return r.blob();
+      })
+      .then((b) => {
+        const needsType = isImage
+          ? !b.type.startsWith("image/")
+          : b.type !== "application/pdf";
+        const typed = needsType
+          ? new Blob([b], { type: isImage ? "image/jpeg" : "application/pdf" })
+          : b;
+        objectUrl = URL.createObjectURL(typed);
+        setSrc(objectUrl);
+      })
+      .catch((e) => setError(e.message || "Could not load the file"));
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [url, filename, isImage]);
+
+  if (error) return <div className="alert-banner" style={{ marginTop: 10 }}>{error}</div>;
+  if (!src) return <div style={{ marginTop: 16 }}><span className="spin dark" /></div>;
+  if (isImage) return <img className="doc-preview-img" src={src} alt={filename} />;
+
+  const pageHash = page && page > 1 ? `#page=${page}` : "";
+  return (
+    <div className="doc-preview-wrap">
+      <iframe className="doc-preview" title={filename} src={`${src}${pageHash}`} />
+      <button className="btn small ghost" onClick={() => window.open(src, "_blank")}>
+        <Icon name="file" size={14} /> Open in new tab
+      </button>
+    </div>
+  );
 }

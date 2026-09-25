@@ -116,7 +116,13 @@ def get_document_file(document_id: str, user: User = Depends(current_user), db: 
     if not doc:
         raise HTTPException(404, "Document not found")
     require_membership(db, user, doc.circle_id)
-    return FileResponse(doc.storage_path, filename=doc.filename)
+    media = "application/pdf" if doc.filename.lower().endswith(".pdf") else None
+    return FileResponse(
+        doc.storage_path,
+        filename=doc.filename,
+        media_type=media,
+        content_disposition_type="inline",
+    )
 
 
 class ReviewIn(BaseModel):

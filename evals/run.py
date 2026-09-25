@@ -29,8 +29,10 @@ import tempfile
 import time
 from pathlib import Path
 
+from samples_path import sample_documents_dir  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SAMPLES = REPO_ROOT.parent / "Sample documents"
+SAMPLES = sample_documents_dir(REPO_ROOT)
 REPORTS = REPO_ROOT / "evals" / "reports"
 GOLDEN = REPO_ROOT / "evals" / "golden"
 
@@ -40,6 +42,13 @@ os.environ.setdefault("DATABASE_URL", f"sqlite:///{_tmp}/evals.db")
 os.environ.setdefault("UPLOAD_DIR", f"{_tmp}/uploads")
 os.environ.setdefault("CHROMA_DIR", f"{_tmp}/chroma")
 os.environ.setdefault("CHECKPOINT_DB", f"{_tmp}/checkpoints.db")
+# Smoke / GitHub Actions must stay offline even if a developer .env is present.
+_force_demo = "--smoke" in sys.argv or os.environ.get("CI") == "true"
+if _force_demo and os.environ.get("IHTAMA_LIVE_EVALS") != "1":
+    os.environ["OPENAI_API_KEY"] = ""
+    os.environ["ANTHROPIC_API_KEY"] = ""
+    os.environ["LANGCHAIN_TRACING_V2"] = ""
+    os.environ["LANGCHAIN_API_KEY"] = ""
 sys.path.insert(0, str(REPO_ROOT / "services" / "api"))
 sys.path.insert(0, str(REPO_ROOT / "evals"))
 

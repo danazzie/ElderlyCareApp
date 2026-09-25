@@ -2,12 +2,19 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   pull_request:
+  workflow_dispatch:
 
 jobs:
   backend:
     runs-on: ubuntu-latest
+    env:
+      CI: true
+      OPENAI_API_KEY: ""
+      ANTHROPIC_API_KEY: ""
+      LANGCHAIN_TRACING_V2: ""
+      LANGCHAIN_API_KEY: ""
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -22,10 +29,12 @@ jobs:
       - name: Smoke evals (10 cases, budget-capped, safety gate)
         run: python evals/run.py --smoke
       - name: Upload eval report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: eval-report
           path: evals/reports/
+          if-no-files-found: ignore
 
   web:
     runs-on: ubuntu-latest
@@ -52,6 +61,7 @@ jobs:
       - run: pip install -r services/api/requirements.txt
       - run: python evals/run.py --ab
         env:
+          IHTAMA_LIVE_EVALS: "1"
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LANGCHAIN_TRACING_V2: "true"
           LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}

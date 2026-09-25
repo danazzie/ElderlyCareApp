@@ -136,6 +136,19 @@ h1, h2, h3, h4 { margin: 0; font-weight: 800; letter-spacing: -0.02em; }
 
 /* ---------- primitives ---------- */
 .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; }
+.source-pane { min-height: 320px; }
+.doc-preview-wrap { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.doc-preview {
+  width: 100%;
+  height: min(72vh, 820px);
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+}
+.doc-preview-img { width: 100%; border-radius: 12px; margin-top: 10px; display: block; }
+@media (min-width: 980px) {
+  .source-pane { position: sticky; top: 16px; }
+}
 .card.accent-coral { border-left: 3px solid var(--coral); }
 .card.accent-amber { border-left: 3px solid var(--amber); }
 .grid { display: grid; gap: 16px; }
