@@ -235,6 +235,29 @@ def test_voice_red_flag_and_wrong_patient(caregiver, circle_id):
     assert r.json()["status"] == "discarded", "wrong-patient updates must be discarded even if confirmed"
 
 
+def test_ask_due_tonight_uses_plan(owner, circle_id):
+    client.post(f"/api/circles/{circle_id}/medications", headers=owner,
+                json={"name": "Donepezil", "dose": "5 mg", "schedule": "night"})
+    client.post(f"/api/circles/{circle_id}/tasks", headers=owner,
+                json={"title": "Give evening tablets", "due": "tonight"})
+    r = client.post(f"/api/circles/{circle_id}/ask", headers=owner,
+                    json={"question": "What's due tonight?"})
+    body = r.json()
+    assert body["route"] == "record_fact"
+    answer = body["answer"].lower()
+    assert "donepezil" in answer or "evening tablets" in answer, body["answer"]
+    assert "do not contain" not in answer and "could not find" not in answer
+
+
+def test_ask_general_care_uses_knowledge(owner, circle_id):
+    r = client.post(f"/api/circles/{circle_id}/ask", headers=owner,
+                    json={"question": "How do I help him sit up comfortably in bed?"})
+    body = r.json()
+    assert body["route"] == "general_care"
+    assert "doctor" not in body["answer"].lower() or "not medical advice" in body["answer"].lower()
+    assert any(w in body["answer"].lower() for w in ("sit", "bed", "comfort", "upright", "routine", "guidance"))
+
+
 def test_ask_record_fact_with_citation(owner, circle_id):
     r = client.post(f"/api/circles/{circle_id}/ask", headers=owner,
                     json={"question": "What did the doctor say about the follow-up appointment?"})

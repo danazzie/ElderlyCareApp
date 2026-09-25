@@ -487,15 +487,38 @@ def complete(task: str, system: str, user_content, context: dict) -> str:
         if re.search(r"\b(weather|joke|football|recipe|news|bitcoin)\b", text, re.I):
             return json.dumps({"route": "out_of_scope", "reason": "not about the care record"})
         record_terms = (r"\b(doctor|letter|document|appointment|medication|plan|update|said|when|who|"
-                        r"instruction|dose|clinic|follow.?up|blood pressure|weigh|his|her|he|she|today|last)\b")
+                        r"instruction|dose|clinic|follow.?up|blood pressure|weigh|his|her|he|she|"
+                        r"today|tonight|due|task|last)\b")
         if re.search(r"\b(how (do|to)|tips|advice|prevent)\b", text, re.I) and not re.search(
                 record_terms, text, re.I):
             return json.dumps({"route": "general_care", "reason": "general caregiving question"})
         return json.dumps({"route": "record_fact", "reason": "asks about the care record"})
     if task == "answer":
         chunks = context.get("chunks", [])
+        route = context.get("route", "record_fact")
+        if route == "general_care":
+            cites = []
+            plan = next((c for c in chunks if c.get("source_type") == "care_plan" or c.get("doc_name") == "Care plan"), None)
+            extra = ""
+            if plan:
+                extra = " From this family's plan: " + plan["text"][:240]
+                cites.append({"doc_id": plan.get("doc_id", "care_plan"), "doc_name": "Care plan",
+                              "page": 1, "quote": plan["text"][:120]})
+            return json.dumps({
+                "answer": "General caregiving guidance (demo): keep the routine calm and unhurried."
+                          + extra + " This is general guidance, not medical advice.",
+                "citations": cites,
+            })
         if not chunks:
             return json.dumps({"answer": "I could not find this in the approved care records. If you can, upload the relevant document or ask the person who knows.", "citations": []})
+        q_toks = set(re.findall(r"\w+", text.lower())) - {
+            "what", "is", "his", "her", "the", "a", "an", "about", "did", "in", "last",
+            "of", "and", "to", "for", "on", "was", "were", "how", "do", "we", "i",
+        }
+        relevant = [c for c in chunks if q_toks & set(re.findall(r"\w+", c["text"].lower()))]
+        if not relevant:
+            return json.dumps({"answer": "I could not find this in the approved care records. If you can, upload the relevant document or ask the person who knows.", "citations": []})
+        chunks = relevant
         lines, citations = [], []
         for c in chunks[:3]:
             snippet = c["text"][:220].strip().rstrip(",;")
