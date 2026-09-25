@@ -159,6 +159,42 @@ def test_voice_update_flow(caregiver, circle_id):
     assert r.json()["status"] == "confirmed"
 
 
+def test_voice_note_commits_follow_up_appointment(caregiver, owner, circle_id):
+    """A confirmed voice note that mentions a new clinic visit must land on the plan."""
+    note = ("Hi, everything is alright, the metrics and vitals are ok. "
+            "Today we went to hospital and they advised to see cardiologist in one week time.")
+    before = client.get(f"/api/circles/{circle_id}/plan", headers=owner).json()
+    r = client.post(f"/api/circles/{circle_id}/updates", headers=caregiver, data={"text": note})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert any("cardio" in str(a).lower() for a in (body["structured"].get("appointments") or [])), \
+        body["structured"]
+    r = client.post(f"/api/updates/{body['id']}/confirm", headers=caregiver,
+                    json={"action": "confirmed"})
+    assert r.json()["status"] == "confirmed"
+    after = client.get(f"/api/circles/{circle_id}/plan", headers=owner).json()
+    assert any("cardio" in a["what"].lower() for a in after["appointments"]), after["appointments"]
+    today = client.get(f"/api/circles/{circle_id}/today", headers=owner).json()
+    assert today["next_appointment"] and "cardio" in today["next_appointment"]["what"].lower()
+    assert len(after["medications"]) == len(before["medications"])
+
+
+def test_voice_medication_change_updates_plan(caregiver, owner, circle_id):
+    """Spoken plan changes (start/stop a drug) commit after caregiver confirm; 'given today' does not."""
+    note = "The cardiologist started Atorvastatin 20 mg at night. No other medication changes."
+    r = client.post(f"/api/circles/{circle_id}/updates", headers=caregiver, data={"text": note})
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert any("atorvastatin" in str(m).lower() for m in (body["structured"].get("medication_changes") or [])), \
+        body["structured"]
+    r = client.post(f"/api/updates/{body['id']}/confirm", headers=caregiver,
+                    json={"action": "confirmed"})
+    assert r.json()["status"] == "confirmed"
+    plan = client.get(f"/api/circles/{circle_id}/plan", headers=owner).json()
+    names = {m["name"].lower() for m in plan["medications"]}
+    assert any(n.startswith("atorvastatin") for n in names), names
+
+
 def test_voice_red_flag_and_wrong_patient(caregiver, circle_id):
     # medication refusal -> red flag, still saveable
     with (SAMPLES / "Vital only, medication refusal.m4a").open("rb") as f:

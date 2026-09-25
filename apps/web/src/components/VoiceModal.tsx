@@ -74,7 +74,7 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
         {phase === "input" && (
           <>
             <p className="muted">Record what happened during the visit  -  meals, medications given,
-              vitals, mood. Ihtama structures it for the family.</p>
+              vitals, mood, or a new clinic date. Confirming shares it and updates the plan.</p>
             <button className={`rec-btn${recording ? " recording" : ""}`} onClick={toggleRecord} aria-label={recording ? "Stop" : "Record"}>
               <Icon name={recording ? "stop" : "mic"} size={32} />
             </button>
@@ -120,6 +120,14 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
               {s.mood && <div className="row"><Icon name="smile" size={16} /> <b>Mood:</b> {s.mood}</div>}
               {(s.incidents ?? []).length > 0 && (
                 <div className="row"><Icon name="circleAlert" size={16} /> <b>Incidents:</b> {(s.incidents as string[]).join("; ")}</div>
+              )}
+              {(s.appointments ?? []).length > 0 && (
+                <div className="row"><Icon name="calendar" size={16} /> <b>Appointments:</b>{" "}
+                  {(s.appointments as any[]).map((a) => `${a.what}${a.when ? ` (${a.when})` : ""}`).join("; ")}</div>
+              )}
+              {(s.medication_changes ?? []).length > 0 && (
+                <div className="row"><Icon name="pill" size={16} /> <b>Plan changes:</b>{" "}
+                  {(s.medication_changes as any[]).map((m) => `${m.change || "CHANGED"} ${m.name}${m.dose ? ` ${m.dose}` : ""}`).join("; ")}</div>
               )}
               {s.has_care_facts === false && <div className="muted">No care facts detected in this note.</div>}
             </div>

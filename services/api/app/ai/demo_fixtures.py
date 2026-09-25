@@ -392,6 +392,62 @@ def transcript_for(filename: str) -> str:
     return t or "Demo mode: no fixture transcript for this audio. Set OPENAI_API_KEY for live transcription."
 
 
+_EMPTY_STRUCTURE = {
+    "has_care_facts": False, "meals": "", "medications_given": [], "vitals": {},
+    "mood": "", "incidents": [], "appointments": [], "medication_changes": [],
+    "red_flags": [], "needs_clarification": [],
+}
+
+_RELATIVE_WHEN = re.compile(r"in\s+(one|a|two|\d+)\s+(day|week|month)s?(?:\s+time)?", re.I)
+_SEE_CLINICIAN = re.compile(
+    r"(?:see|visit|book|follow[- ]?up with|advised to see)\s+(?:the\s+)?([A-Za-z][A-Za-z\- ]{2,40})",
+    re.I)
+_STARTED_MED = re.compile(
+    r"\b(?:started|prescribed|added)\s+([A-Za-z][A-Za-z0-9\-]+)(?:\s+(\d+\s*mg))?(?:\s+(?:at\s+)?(night|morning|evening|daily|nocte))?",
+    re.I)
+_STOPPED_MED = re.compile(
+    r"\b(?:stopped|discontinued)\s+([A-Za-z][A-Za-z0-9\-]+)",
+    re.I)
+
+
+def free_text_update(text: str) -> dict:
+    """Best-effort structure for typed notes / unmatched audio in demo mode."""
+    out = {**_EMPTY_STRUCTURE, "needs_clarification": []}
+    appointments, changes = [], []
+    when = ""
+    rel = _RELATIVE_WHEN.search(text)
+    if rel:
+        when = rel.group(0)
+    for m in _SEE_CLINICIAN.finditer(text):
+        who = m.group(1).strip(" .,").split(" in ")[0].strip()
+        if len(who) < 3 or who.lower() in {"hospital", "the", "them"}:
+            continue
+        appointments.append({
+            "what": f"{who[0].upper() + who[1:]} follow-up",
+            "when": when or "date TBC",
+            "where": "hospital" if "hospital" in text.lower() else "",
+            "with_whom": who,
+        })
+    for m in _STARTED_MED.finditer(text):
+        changes.append({
+            "name": m.group(1), "dose": (m.group(2) or "").strip(),
+            "frequency": m.group(3) or "", "change": "STARTED",
+        })
+    for m in _STOPPED_MED.finditer(text):
+        changes.append({
+            "name": m.group(1), "dose": "", "frequency": "", "change": "STOPPED",
+        })
+    if "vital" in text.lower() or re.search(r"\b(bp|blood pressure|pulse)\b", text, re.I):
+        if re.search(r"\b(ok|alright|normal|fine)\b", text, re.I):
+            out["vitals"] = {"note": "reported as ok"}
+    out["appointments"] = appointments
+    out["medication_changes"] = changes
+    out["has_care_facts"] = bool(appointments or changes or out["vitals"])
+    if not out["has_care_facts"]:
+        out["needs_clarification"] = ["Demo mode: unknown audio."]
+    return out
+
+
 def structured_for(filename_or_transcript: str) -> dict:
     s = _match(filename_or_transcript, STRUCTURED_UPDATES)
     if s:
@@ -399,8 +455,7 @@ def structured_for(filename_or_transcript: str) -> dict:
     for key, transcript in TRANSCRIPTS.items():
         if transcript[:60].lower() in filename_or_transcript.lower():
             return STRUCTURED_UPDATES[key]
-    return {"has_care_facts": False, "meals": "", "medications_given": [], "vitals": {},
-            "mood": "", "incidents": [], "red_flags": [], "needs_clarification": ["Demo mode: unknown audio."]}
+    return free_text_update(filename_or_transcript)
 
 
 CLINICAL_PATTERNS = re.compile(
