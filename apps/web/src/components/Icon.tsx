@@ -3,7 +3,7 @@ import {
   Ban, Bell, CalendarDays, Check, ChevronLeft, ChevronRight, CircleAlert,
   CircleCheck, ClipboardList, Clock, FileText, FolderOpen, House, Image,
   LogOut, Mic, Pencil, Phone, Pill, Plus, Scale, ScanLine, ScrollText, Send,
-  ShieldCheck, Smile, Sparkles, Square, Stethoscope, TriangleAlert, Upload,
+  ShieldCheck, Smile, Sparkles, Square, Stethoscope, Trash2, TriangleAlert, Upload,
   Users, Utensils, X,
 } from "lucide-react";
 
@@ -42,6 +42,7 @@ const ICONS = {
   scale: Scale,
   stop: Square,
   logOut: LogOut,
+  trash: Trash2,
 } as const;
 
 export type IconName = keyof typeof ICONS;

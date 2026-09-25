@@ -109,5 +109,7 @@ export const api = {
     req<{ id: string; answer: string; citations: Citation[]; route: string }>(
       `/circles/${circleId}/ask`, { method: "POST", body: JSON.stringify({ question, variant }) }),
   messages: (circleId: string) => req<ChatMsg[]>(`/circles/${circleId}/messages`),
+  clearMessages: (circleId: string) =>
+    req<{ deleted: number }>(`/circles/${circleId}/messages`, { method: "DELETE" }),
   health: () => req<{ demo_mode: boolean }>("/health"),
 };
