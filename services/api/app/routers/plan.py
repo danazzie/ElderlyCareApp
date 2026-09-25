@@ -16,7 +16,8 @@ def get_plan(circle_id: str, user: User = Depends(current_user), db: Session = D
     require_membership(db, user, circle_id)
     meds = db.query(Medication).filter(Medication.circle_id == circle_id,
                                        Medication.active.is_(True)).order_by(Medication.name).all()
-    appts = db.query(Appointment).filter(Appointment.circle_id == circle_id) \
+    appts = db.query(Appointment).filter(Appointment.circle_id == circle_id,
+                                         Appointment.status.notin_(["done", "cancelled"])) \
         .order_by(Appointment.when_text).all()
     tasks = db.query(Task).filter(Task.circle_id == circle_id).order_by(Task.created_at.desc()).all()
     return {
@@ -100,6 +101,72 @@ def stop_medication(med_id: str, user: User = Depends(current_user), db: Session
     return {"id": med.id, "active": False}
 
 
+class AppointmentIn(BaseModel):
+    what: str
+    when: str = ""
+    where: str = ""
+    with_whom: str = ""
+
+
+def _appt_out(a: Appointment) -> dict:
+    return {"id": a.id, "when": a.when_text, "where": a.where_text, "what": a.what,
+            "with_whom": a.with_whom, "status": a.status}
+
+
+@router.post("/circles/{circle_id}/appointments")
+def add_appointment(circle_id: str, data: AppointmentIn, user: User = Depends(current_user),
+                    db: Session = Depends(get_db)):
+    require_membership(db, user, circle_id, roles=["owner", "member"])
+    what = data.what.strip()
+    if len(what) < 2:
+        raise HTTPException(400, "Appointment title is required")
+    appt = Appointment(circle_id=circle_id, what=what, when_text=data.when.strip(),
+                       where_text=data.where.strip(), with_whom=data.with_whom.strip())
+    db.add(appt)
+    db.add(AuditEvent(circle_id=circle_id, actor_user_id=user.id, action="appointment_added",
+                      entity=f"appointment:{appt.id}",
+                      detail={"what": appt.what, "when": appt.when_text}))
+    db.commit()
+    return _appt_out(appt)
+
+
+@router.patch("/appointments/{appt_id}")
+def edit_appointment(appt_id: str, data: AppointmentIn, user: User = Depends(current_user),
+                     db: Session = Depends(get_db)):
+    appt = db.get(Appointment, appt_id)
+    if not appt or appt.status in ("done", "cancelled"):
+        raise HTTPException(404, "Appointment not found")
+    require_membership(db, user, appt.circle_id, roles=["owner", "member"])
+    what = data.what.strip()
+    if len(what) < 2:
+        raise HTTPException(400, "Appointment title is required")
+    if data.when.strip() and data.when.strip() != appt.when_text:
+        appt.status = "rescheduled"
+    appt.what = what
+    appt.when_text = data.when.strip()
+    appt.where_text = data.where.strip()
+    appt.with_whom = data.with_whom.strip()
+    db.add(AuditEvent(circle_id=appt.circle_id, actor_user_id=user.id, action="appointment_edited",
+                      entity=f"appointment:{appt.id}",
+                      detail={"what": appt.what, "when": appt.when_text}))
+    db.commit()
+    return _appt_out(appt)
+
+
+@router.post("/appointments/{appt_id}/cancel")
+def cancel_appointment(appt_id: str, user: User = Depends(current_user),
+                       db: Session = Depends(get_db)):
+    appt = db.get(Appointment, appt_id)
+    if not appt or appt.status in ("done", "cancelled"):
+        raise HTTPException(404, "Appointment not found")
+    require_membership(db, user, appt.circle_id, roles=["owner", "member"])
+    appt.status = "cancelled"
+    db.add(AuditEvent(circle_id=appt.circle_id, actor_user_id=user.id, action="appointment_cancelled",
+                      entity=f"appointment:{appt.id}", detail={"what": appt.what}))
+    db.commit()
+    return {"id": appt.id, "status": "cancelled"}
+
+
 class TaskIn(BaseModel):
     title: str
     due: str = ""
@@ -141,7 +208,7 @@ def today(circle_id: str, user: User = Depends(current_user), db: Session = Depe
                                                  CareUpdate.status == "confirmed")
                      .order_by(CareUpdate.created_at.desc()).first())
     next_appt = (db.query(Appointment).filter(Appointment.circle_id == circle_id,
-                                              Appointment.status != "done")
+                                              Appointment.status.notin_(["done", "cancelled"]))
                  .order_by(Appointment.when_text).first())
     open_tasks = db.query(Task).filter(Task.circle_id == circle_id, Task.status == "open").count()
     meds = db.query(Medication).filter(Medication.circle_id == circle_id,

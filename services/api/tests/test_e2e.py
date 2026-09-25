@@ -290,6 +290,23 @@ def test_join_requires_family_approval_and_caregiver_can_be_removed(owner, circl
     assert client.get(f"/api/circles/{circle_id}/plan", headers=carer).status_code == 403
 
 
+def test_manual_appointment_edit(owner, caregiver, circle_id):
+    r = client.post(f"/api/circles/{circle_id}/appointments", headers=owner,
+                    json={"what": "Cardiology", "when": "next Tuesday", "where": "City Hospital"})
+    assert r.status_code == 200, r.text
+    appt_id = r.json()["id"]
+    r = client.patch(f"/api/appointments/{appt_id}", headers=owner,
+                     json={"what": "Cardiology clinic", "when": "2026-10-07", "where": "City Hospital"})
+    assert r.json()["what"] == "Cardiology clinic"
+    assert r.json()["status"] == "rescheduled"
+    assert client.post(f"/api/circles/{circle_id}/appointments", headers=caregiver,
+                       json={"what": "Physio"}).status_code == 403
+    r = client.post(f"/api/appointments/{appt_id}/cancel", headers=owner)
+    assert r.json()["status"] == "cancelled"
+    whats = {a["what"].lower() for a in client.get(f"/api/circles/{circle_id}/plan", headers=owner).json()["appointments"]}
+    assert "cardiology clinic" not in whats
+
+
 def test_manual_medication_edit(owner, caregiver, circle_id):
     r = client.post(f"/api/circles/{circle_id}/medications", headers=owner,
                     json={"name": "Ramipril", "dose": "5 mg", "schedule": "morning"})

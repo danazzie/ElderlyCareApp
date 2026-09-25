@@ -100,6 +100,14 @@ export const api = {
     req(`/medications/${medId}`, { method: "PATCH", body: JSON.stringify({ name, dose, schedule }) }),
   stopMedication: (medId: string) =>
     req(`/medications/${medId}/stop`, { method: "POST" }),
+  addAppointment: (circleId: string, what: string, when = "", where = "", withWhom = "") =>
+    req(`/circles/${circleId}/appointments`, { method: "POST",
+      body: JSON.stringify({ what, when, where, with_whom: withWhom }) }),
+  editAppointment: (apptId: string, what: string, when = "", where = "", withWhom = "") =>
+    req(`/appointments/${apptId}`, { method: "PATCH",
+      body: JSON.stringify({ what, when, where, with_whom: withWhom }) }),
+  cancelAppointment: (apptId: string) =>
+    req(`/appointments/${apptId}/cancel`, { method: "POST" }),
   documents: (id: string) => req<Doc[]>(`/circles/${id}/documents`),
   document: (docId: string) => req<Doc>(`/documents/${docId}`),
   uploadDocument: (circleId: string, file: File) => {
