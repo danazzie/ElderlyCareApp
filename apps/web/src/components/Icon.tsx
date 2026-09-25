@@ -4,7 +4,7 @@ import {
   CircleCheck, ClipboardList, Clock, FileText, FolderOpen, House, Image,
   LogOut, Mic, Pencil, Phone, Pill, Plus, Scale, ScanLine, ScrollText, Send,
   ShieldCheck, Smile, Sparkles, Square, Stethoscope, Trash2, TriangleAlert, Upload,
-  Users, Utensils, X,
+  Users, Utensils, Volume2, VolumeX, X,
 } from "lucide-react";
 
 const ICONS = {
@@ -43,6 +43,8 @@ const ICONS = {
   stop: Square,
   logOut: LogOut,
   trash: Trash2,
+  volume: Volume2,
+  volumeOff: VolumeX,
 } as const;
 
 export type IconName = keyof typeof ICONS;

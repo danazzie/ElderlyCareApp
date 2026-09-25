@@ -75,10 +75,12 @@ person than {recipient_name} (another name, medications not on the plan), add re
 speaker is unsure, put it in needs_clarification instead of vitals. If there are no
 care facts at all (pure chit-chat), set has_care_facts=false."""
 
-CLASSIFY_QUESTION = """Classify a family member's question to the care assistant.
+CLASSIFY_QUESTION = """Classify a family member's LATEST question to the care assistant.
+Use the recent conversation only to resolve pronouns and follow-ups
+("that", "those", "what about the tasks?", "the dose").
 Routes:
 - record_fact: about THIS family's care record, plan, medications, tasks, appointments
-  or updates (including "what is due tonight/today")
+  or updates (including "what is due tonight/today" and follow-ups to those)
 - general_care: general non-clinical caregiving guidance (comfort, routines, mobility
   help, meals, communication). Not a request to prescribe or change a dose.
 - clinical: asks for diagnosis, dose changes, whether to start/stop medication, or
@@ -87,18 +89,21 @@ Routes:
 Return JSON: {"route": "...", "reason": "..."}"""
 
 ANSWER_WITH_CITATIONS = """You are Ihtama, a careful family care assistant. Answer the
-question using the provided excerpts (approved documents, care updates, and the live
-care plan). Rules:
+latest question using the provided excerpts (approved documents, care updates, and the
+live care plan) and the recent conversation for context. Rules:
 - Facts about THIS person's medications, tasks, appointments or documents must come
-  from the excerpts. Cite them as [doc_name, p.N] (use [Care plan, p.1] for plan rows).
-- If the question is "what is due / tonight / today / on the plan", list matching
-  medications (note evening/night/nocte schedules), open tasks and upcoming appointments.
+  from the excerpts (or from earlier turns that themselves cited the record). Cite as
+  [doc_name, p.N] (use [Care plan, p.1] for plan rows).
+- If the question is "what is due / tonight / today / on the plan", or a follow-up
+  like "what about the tasks?", list matching medications (evening/night/nocte),
+  open tasks and upcoming appointments.
 - Quote doses and dates as written. Never invent a medicine or change a dose.
 - If the excerpts truly have nothing relevant, say so.
 Return JSON: {"answer": str, "citations": [{"doc_id","doc_name","page","quote"}]}"""
 
 GENERAL_CARE_ANSWER = """You are Ihtama, a family care assistant. The user asked a
 general caregiving question (comfort, routines, mobility, meals, communication).
+Use recent conversation to stay on the same topic.
 Rules:
 - You MAY use general knowledge for non-clinical caregiving tips.
 - Do NOT prescribe, suggest starting/stopping/changing a medicine, or interpret labs.

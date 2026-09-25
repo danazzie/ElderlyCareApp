@@ -23,6 +23,7 @@ from ..model_router import parse_json, router
 class AskState(TypedDict, total=False):
     circle_id: str
     question: str
+    history: list[dict]     # prior {role, content} turns for this circle
     variant: str            # RAG A/B variant
     route: str
     blocked_reason: str
@@ -31,6 +32,17 @@ class AskState(TypedDict, total=False):
     citations: list[dict]
     faithful: bool
     retries: int
+
+
+def _history_block(state: AskState) -> str:
+    rows = state.get("history") or []
+    if not rows:
+        return ""
+    lines = []
+    for m in rows[-8:]:
+        who = "Family" if m.get("role") == "user" else "Ihtama"
+        lines.append(f"{who}: {str(m.get('content', ''))[:400]}")
+    return "Recent conversation:\n" + "\n".join(lines) + "\n\n"
 
 
 def input_guardrail(state: AskState) -> AskState:
@@ -51,8 +63,12 @@ def refuse(state: AskState) -> AskState:
 
 
 def classify(state: AskState) -> AskState:
-    out = router.complete("classify_question", prompts.CLASSIFY_QUESTION, state["question"],
-                          tier="fast", json_mode=True)
+    out = router.complete(
+        "classify_question", prompts.CLASSIFY_QUESTION,
+        f"{_history_block(state)}Latest question: {state['question']}",
+        tier="fast", json_mode=True,
+        context={"history": state.get("history", [])},
+    )
     return {"route": parse_json(out).get("route", "record_fact")}
 
 
@@ -80,7 +96,10 @@ def polite_decline(state: AskState) -> AskState:
 
 
 def retrieve(state: AskState) -> AskState:
-    chunks = rag.retrieve(state["circle_id"], state["question"], variant=state.get("variant", "A"))
+    prior = " ".join(
+        m.get("content", "") for m in (state.get("history") or [])[-4:] if m.get("role") == "user")
+    query = (state["question"] + " " + prior).strip()
+    chunks = rag.retrieve(state["circle_id"], query, variant=state.get("variant", "A"))
     return {"chunks": chunks}
 
 
@@ -88,10 +107,13 @@ def answer_with_citations(state: AskState) -> AskState:
     chunks = state.get("chunks", [])
     excerpts = "\n\n".join(f"[{c['doc_name']}, p.{c['page']}]\n{c['text']}" for c in chunks)
     prompt = prompts.GENERAL_CARE_ANSWER if state.get("route") == "general_care" else prompts.ANSWER_WITH_CITATIONS
-    out = router.complete("answer", prompt,
-                          f"Question: {state['question']}\n\nRecord excerpts:\n{excerpts or '(none found)'}",
-                          tier="answer", json_mode=True,
-                          temperature=0.2, context={"chunks": chunks, "route": state.get("route", "record_fact")})
+    out = router.complete(
+        "answer", prompt,
+        f"{_history_block(state)}Question: {state['question']}\n\nRecord excerpts:\n{excerpts or '(none found)'}",
+        tier="answer", json_mode=True, temperature=0.2,
+        context={"chunks": chunks, "route": state.get("route", "record_fact"),
+                 "history": state.get("history", [])},
+    )
     result = parse_json(out)
     return {"answer": result.get("answer", ""), "citations": result.get("citations", [])}
 
@@ -148,7 +170,7 @@ def build_ask_graph():
                             {"regenerate": "regenerate", "output_guardrail": "output_guardrail"})
     g.add_edge("regenerate", "answer_with_citations")
     g.add_edge("output_guardrail", END)
-    return g.compile()  # no checkpointer: Ask is stateless request/response
+    return g.compile()  # circle chat history is passed in on each request
 
 
 ask_graph = build_ask_graph()

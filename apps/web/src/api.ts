@@ -129,6 +129,11 @@ export const api = {
   ask: (circleId: string, question: string, variant = "A") =>
     req<{ id: string; answer: string; citations: Citation[]; route: string }>(
       `/circles/${circleId}/ask`, { method: "POST", body: JSON.stringify({ question, variant }) }),
+  transcribeAsk: (circleId: string, audio: Blob, filename: string) => {
+    const fd = new FormData();
+    fd.append("audio", audio, filename);
+    return req<{ transcript: string }>(`/circles/${circleId}/ask/transcribe`, { method: "POST", body: fd });
+  },
   messages: (circleId: string) => req<ChatMsg[]>(`/circles/${circleId}/messages`),
   clearMessages: (circleId: string) =>
     req<{ deleted: number }>(`/circles/${circleId}/messages`, { method: "DELETE" }),
