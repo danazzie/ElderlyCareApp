@@ -7,9 +7,9 @@ from .security import hash_password
 
 DEMO_PASSWORD = "demo1234"
 DEMO_USERS = [
-    {"email": "danagul@ahtama.demo", "name": "Danagul", "role": "owner"},
-    {"email": "aisha@ahtama.demo", "name": "Aisha", "role": "member"},
-    {"email": "fatima@ahtama.demo", "name": "Fatima", "role": "caregiver"},
+    {"email": "danagul@ihtama.demo", "name": "Danagul", "role": "owner"},
+    {"email": "aisha@ihtama.demo", "name": "Aisha", "role": "member"},
+    {"email": "fatima@ihtama.demo", "name": "Fatima", "role": "caregiver"},
 ]
 
 
@@ -35,6 +35,6 @@ def seed():
         db.add(Task(circle_id=circle.id, title="Upload the latest discharge letter", source="manual"))
         db.commit()
         print("Seeded demo data: circle for Ahmed Al-Karim, users danagul/aisha/fatima "
-              f"@ahtama.demo (password: {DEMO_PASSWORD})")
+              f"@ihtama.demo (password: {DEMO_PASSWORD})")
     finally:
         db.close()

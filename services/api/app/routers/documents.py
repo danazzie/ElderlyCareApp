@@ -19,7 +19,7 @@ from ..db import SessionLocal, get_db
 from ..models import Document, ExtractedItem, User
 from ..security import current_user, require_membership
 
-log = logging.getLogger("ahtama.documents")
+log = logging.getLogger("ihtama.documents")
 router = APIRouter(tags=["documents"])
 
 ALLOWED = {".pdf", ".jpg", ".jpeg", ".png", ".webp"}

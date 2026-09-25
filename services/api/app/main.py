@@ -1,4 +1,4 @@
-"""Ahtama API entrypoint.
+"""Ihtama API entrypoint.
 
 Run: uvicorn app.main:app --reload  (from services/api)
 Serves the built web app from apps/web/dist when present (single-service deploy).

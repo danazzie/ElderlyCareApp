@@ -1,6 +1,6 @@
 {
-  "name": "Ahtama — family care record",
-  "short_name": "Ahtama",
+  "name": "Ihtama — family care record",
+  "short_name": "Ihtama",
   "description": "One parent. Many carers. One trusted care record.",
   "start_url": "/",
   "display": "standalone",

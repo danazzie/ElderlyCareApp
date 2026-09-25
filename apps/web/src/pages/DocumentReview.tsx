@@ -23,7 +23,7 @@ function ItemCard({ item, decision, onDecide, onEdit, canReview }:
           <IconTile name={KIND_ICON[item.kind] ?? "file"} tone="green" size={32} iconSize={16} />
           <b>{item.payload.name ?? item.payload.what ?? item.payload.text?.slice(0, 60) ?? item.kind}</b>
         </div>
-        <span className="tiny">p.{item.source_page} ∑ conf {Math.round(item.confidence * 100)}%</span>
+        <span className="tiny">p.{item.source_page} ù conf {Math.round(item.confidence * 100)}%</span>
       </div>
       <div>
         {item.flags.map((f) => <span key={f} className={`flag ${f}`}>{f.replaceAll("_", " ")}</span>)}
@@ -31,14 +31,14 @@ function ItemCard({ item, decision, onDecide, onEdit, canReview }:
       {!editing ? (
         <div className="muted" style={{ fontSize: 13 }}>
           {Object.entries(item.payload).filter(([k]) => !["name", "what", "text"].includes(k))
-            .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`).join(" ∑ ")}
+            .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`).join(" ù ")}
           {item.payload.text && item.payload.text.length > 60 ? ` ${item.payload.text}` : ""}
         </div>
       ) : (
         <textarea className="input" rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} />
       )}
       {item.source_quote && (
-        <div className="quote">"{item.source_quote}" <span className="cite-chip">source ∑ p.{item.source_page}</span></div>
+        <div className="quote">"{item.source_quote}" <span className="cite-chip">source ù p.{item.source_page}</span></div>
       )}
       {canReview && item.review_status === "pending" && (
         <div className="row">
@@ -161,7 +161,7 @@ export default function DocumentReview() {
       </div>
 
       {pending && canReview && (
-        <div className="card row" style={{ position: "sticky", bottom: 84, marginTop: 16, flexWrap: "wrap" }}>
+        <div className="card row sticky-actions" style={{ position: "sticky", bottom: 84, marginTop: 16, flexWrap: "wrap" }}>
           <button className="btn primary" disabled={busy} onClick={() => submit(Object.keys(edits).length ? "edited" : "approved")}>
             {busy ? <span className="spin" /> : Object.keys(edits).length ? "Save edits & re-check" : "Approve & update plan"}
           </button>

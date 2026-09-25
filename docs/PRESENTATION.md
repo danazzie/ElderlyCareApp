@@ -2,7 +2,7 @@
 
 1. **The 60-second story.** "My mother coordinates my grandfather's care through three
    WhatsApp chats, a paper notebook and her memory. Nobody is sure what the doctor
-   said, what was given today, what is next." Ahtama: one parent, many carers, one
+   said, what was given today, what is next." Ihtama: one parent, many carers, one
    trusted care record.
 2. **The user.** The adult child who coordinates a parent's care (owner), siblings
    (members), a caregiver. How they cope today: chat scroll + retyping prescriptions.

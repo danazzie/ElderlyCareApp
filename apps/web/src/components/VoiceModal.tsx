@@ -74,7 +74,7 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
         {phase === "input" && (
           <>
             <p className="muted">Record what happened during the visit  -  meals, medications given,
-              vitals, mood. Ahtama structures it for the family.</p>
+              vitals, mood. Ihtama structures it for the family.</p>
             <button className={`rec-btn${recording ? " recording" : ""}`} onClick={toggleRecord} aria-label={recording ? "Stop" : "Record"}>
               <Icon name={recording ? "stop" : "mic"} size={32} />
             </button>
@@ -105,7 +105,7 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
         {phase === "review" && draft && (
           <>
             {draft.red_flags.length > 0 && (
-              <div className="alert-banner"><Icon name="alert" size={16} /> {draft.red_flags.join(" · ")}</div>
+              <div className="alert-banner"><Icon name="alert" size={16} /> {draft.red_flags.join(" Â· ")}</div>
             )}
             <div className="quote">"{draft.transcript}"</div>
             <div className="stack" style={{ gap: 6 }}>

@@ -21,7 +21,7 @@ from ..config import DEMO_MODE, settings
 from .model_router import router
 
 _client = chromadb.PersistentClient(path=str(settings.chroma_dir))
-_collection = _client.get_or_create_collection("ahtama", metadata={"hnsw:space": "cosine"})
+_collection = _client.get_or_create_collection("ihtama", metadata={"hnsw:space": "cosine"})
 
 CHARS_PER_TOKEN = 4
 CHUNK_CHARS = settings.rag_chunk_tokens * CHARS_PER_TOKEN

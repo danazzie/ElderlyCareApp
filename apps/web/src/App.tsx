@@ -45,7 +45,7 @@ function NoCircle() {
         <p className="muted">Create a circle for the person you care for, or join with an invitation code.</p>
         <button className="btn primary" onClick={() => {
           const name = prompt("Who are you caring for? (name)");
-          if (name) createCircle({ recipient_name: name, consent: confirm(`Do you confirm ${name} (or their legal representative) consents to keeping their care record in Ahtama?`) });
+          if (name) createCircle({ recipient_name: name, consent: confirm(`Do you confirm ${name} (or their legal representative) consents to keeping their care record in Ihtama?`) });
         }}>Create a circle</button>
         <button className="btn ghost" onClick={() => {
           const code = prompt("Invitation code (try AHMED123)");

@@ -38,7 +38,7 @@ export default function Ask() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 140px)" }}>
-      <h2 style={{ marginBottom: 4 }}>Ask Ahtama</h2>
+      <h2 style={{ marginBottom: 4 }}>Ask Ihtama</h2>
       <p className="muted" style={{ marginTop: 2 }}>
         Answers come only from this circle's approved records, with the source cited.
         Medical decisions are always redirected to the doctor.
@@ -67,7 +67,7 @@ export default function Ask() {
               <div>
                 {m.citations.map((c, i) => (
                   <span key={i} className="cite-chip" title={c.quote}>
-                    <Icon name="file" size={12} /> {c.doc_name} · p.{c.page}
+                    <Icon name="file" size={12} /> {c.doc_name} Â· p.{c.page}
                   </span>
                 ))}
               </div>
@@ -78,7 +78,7 @@ export default function Ask() {
         <div ref={endRef} />
       </div>
 
-      <div className="row" style={{ position: "sticky", bottom: 84, background: "var(--bg)", paddingTop: 8 }}>
+      <div className="row composer" style={{ position: "sticky", bottom: 84, background: "var(--bg)", paddingTop: 8 }}>
         <input className="input" placeholder="Ask about the care record..." value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send(input)} />

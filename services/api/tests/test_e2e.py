@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 # isolated data dir per test session, configured before the app is imported
-_tmp = tempfile.mkdtemp(prefix="ahtama-test-")
+_tmp = tempfile.mkdtemp(prefix="ihtama-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 os.environ["UPLOAD_DIR"] = f"{_tmp}/uploads"
 os.environ["CHROMA_DIR"] = f"{_tmp}/chroma"
@@ -33,12 +33,12 @@ def login(email: str) -> dict:
 
 @pytest.fixture(scope="module")
 def owner():
-    return login("danagul@ahtama.demo")
+    return login("danagul@ihtama.demo")
 
 
 @pytest.fixture(scope="module")
 def caregiver():
-    return login("fatima@ahtama.demo")
+    return login("fatima@ihtama.demo")
 
 
 @pytest.fixture(scope="module")

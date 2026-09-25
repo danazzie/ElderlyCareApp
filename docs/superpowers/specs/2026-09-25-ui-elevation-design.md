@@ -1,4 +1,4 @@
-# Ahtama UI elevation - design spec
+# Ihtama UI elevation - design spec
 
 Date: 2026-09-25
 Status: approved
@@ -6,7 +6,7 @@ Branch: `design/elevate-ui`
 
 ## Goal
 
-Raise the Ahtama web app from "matches the mockup" to a visually polished
+Raise the Ihtama web app from "matches the mockup" to a visually polished
 product, in a **warm and reassuring** direction. The app helps families care
 for an elderly parent, so the interface should feel calm, human and
 trustworthy - never clinical or cold.

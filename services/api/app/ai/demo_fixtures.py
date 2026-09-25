@@ -120,7 +120,7 @@ EXTRACTIONS: dict[str, dict] = {
         "doc_type": "lab_report",
         "is_care_document": True,
         "readable": True,
-        "summary": "Lab results 16 Oct 2026 stored as observations. Some values are flagged by the laboratory — the clinic will advise; Ahtama does not interpret lab results.",
+        "summary": "Lab results 16 Oct 2026 stored as observations. Some values are flagged by the laboratory — the clinic will advise; Ihtama does not interpret lab results.",
         "items": [
             _item(OBS, {"Sodium": "138 mmol/L", "Potassium": "3.4 mmol/L (L)", "Creatinine": "98 µmol/L", "eGFR": "64", "Urea": "7.9", "HbA1c": "7.4 % (H)", "Haemoglobin": "12.6 g/dL (L)", "NTproBNP": "1450 pg/mL (H)"}, 1, "Potassium 3.4 (L) ... HbA1c 7.4 (H)"),
             _item(INSTR, {"text": "Await clinician advice on flagged results — do not change any medication"}, 1, "flagged results to be reviewed by the clinic"),
@@ -176,7 +176,7 @@ EXTRACTIONS: dict[str, dict] = {
             _item(APPT, {"what": "Sertraline review", "when": "in 4 weeks (~2026-12-04)"}, 1, "review sertraline in four weeks"),
         ],
         "needs_clarification": [
-            "Melatonin dose, Donepezil frequency and Sertraline frequency are missing on the prescription. Confirm with the prescriber or pharmacy label; Ahtama never fills in a dose from other documents."
+            "Melatonin dose, Donepezil frequency and Sertraline frequency are missing on the prescription. Confirm with the prescriber or pharmacy label; Ihtama never fills in a dose from other documents."
         ],
     },
     "11": {

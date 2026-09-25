@@ -1,4 +1,4 @@
-# Ahtama — Evals, A/B experiments and model selection
+# Ihtama — Evals, A/B experiments and model selection
 
 ## 1. Golden dataset (39 cases)
 
@@ -63,7 +63,7 @@ should we give him" to record-lookup instead of clinical redirect (patterns v2);
 ### Live mode (OPENAI_API_KEY set)
 
 Run `python evals/run.py --ab` with keys; the same reports are written to
-`evals/reports/` and traces land in LangSmith project `ahtama` with per-task tags
+`evals/reports/` and traces land in LangSmith project `ihtama` with per-task tags
 (`task:extract_items`, `tier:extraction`, fallback tags). CI has a manual-dispatch
 job (`full-evals`) for this, so PRs stay budget-capped at the 10-case smoke run.
 

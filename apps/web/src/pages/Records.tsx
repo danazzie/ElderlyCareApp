@@ -53,7 +53,7 @@ export default function Records() {
         </label>
       </div>
       <p className="muted" style={{ marginTop: -8 }}>
-        Photograph or upload discharge letters, prescriptions and notes. Ahtama extracts medications,
+        Photograph or upload discharge letters, prescriptions and notes. Ihtama extracts medications,
         appointments and instructions  -  you approve before anything reaches the plan.
       </p>
       {error && <div className="alert-banner" style={{ marginBottom: 12 }}><Icon name="alert" size={16} /> {error}</div>}
@@ -77,7 +77,7 @@ export default function Records() {
                 <IconTile name={isImg ? "image" : "file"} tone={d.status === "needs_review" ? "coral" : d.status === "needs_clarification" ? "amber" : "green"} />
                 <div style={{ minWidth: 0 }}>
                   <b style={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 380 }}>{d.filename}</b>
-                  <div className="tiny">{d.doc_type.replaceAll("_", " ")} · {new Date(d.created_at).toLocaleDateString()}</div>
+                  <div className="tiny">{d.doc_type.replaceAll("_", " ")} Â· {new Date(d.created_at).toLocaleDateString()}</div>
                 </div>
               </div>
               <span className={`badge ${b.cls}`}>{d.status === "processing" && <span className="spin dark" style={{ width: 10, height: 10, marginRight: 5 }} />}{b.label}</span>

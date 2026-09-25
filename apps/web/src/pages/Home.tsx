@@ -56,6 +56,9 @@ export default function Home() {
           <button className="btn ghost" onClick={() => nav("/records?upload=1")}>
             <Icon name="upload" size={17} /> Upload document
           </button>
+          <a className="btn icon-only coral" href="tel:999" aria-label="Emergency">
+            <Icon name="circleAlert" size={18} />
+          </a>
         </div>
       </div>
 
@@ -177,7 +180,7 @@ export default function Home() {
                 <IconTile name="calendar" tone="amber" />
                 <div>
                   <b>{today.next_appointment.what}</b>
-                  <div className="muted">{today.next_appointment.when}{today.next_appointment.where ? ` ∑ ${today.next_appointment.where}` : ""}</div>
+                  <div className="muted">{today.next_appointment.when}{today.next_appointment.where ? ` ù ${today.next_appointment.where}` : ""}</div>
                 </div>
               </div>
             ) : <div className="muted">Nothing scheduled.</div>}

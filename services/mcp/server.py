@@ -1,4 +1,4 @@
-"""Ahtama MCP server (`ahtama-mcp`).
+"""Ihtama MCP server (`ihtama-mcp`).
 
 Why MCP and not a plain API: these three tools are the single, authorised
 capability layer shared by (1) the LangGraph agent nodes, (2) Claude Desktop /
@@ -14,7 +14,7 @@ Tools
 
 Run (stdio, e.g. for Claude Desktop):
     python services/mcp/server.py
-Auth: set AHTAMA_TOKEN (JWT from /api/auth/login). Every call is checked against
+Auth: set IHTAMA_TOKEN (JWT from /api/auth/login). Every call is checked against
 Membership — tenancy is enforced server-side, not by prompt.
 """
 import os
@@ -34,14 +34,14 @@ from app.models import (Appointment, AuditEvent, CareCircle, CareUpdate,
 
 Base.metadata.create_all(engine)
 
-mcp = MCPServer("ahtama-mcp")
+mcp = MCPServer("ihtama-mcp")
 
 
 def _auth(circle_id: str, roles: list[str] | None = None) -> str:
-    """Resolve the calling user from AHTAMA_TOKEN and verify circle membership."""
-    token = os.environ.get("AHTAMA_TOKEN", "")
+    """Resolve the calling user from IHTAMA_TOKEN and verify circle membership."""
+    token = os.environ.get("IHTAMA_TOKEN", "")
     if not token:
-        raise PermissionError("AHTAMA_TOKEN is not set (login via /api/auth/login)")
+        raise PermissionError("IHTAMA_TOKEN is not set (login via /api/auth/login)")
     try:
         user_id = pyjwt.decode(token, settings.secret_key, algorithms=["HS256"])["sub"]
     except pyjwt.PyJWTError as e:
@@ -120,7 +120,7 @@ def propose_care_plan_change(circle_id: str, kind: str, payload: dict,
                              rationale: str, source_ref: str = "") -> dict:
     """Propose a change to the care plan (kind: medication | appointment | task).
     The proposal is created as a PENDING item that a family owner/member must
-    approve in the Ahtama app — this tool can never write to the plan directly.
+    approve in the Ihtama app — this tool can never write to the plan directly.
     That rule lives here, at the boundary, on purpose."""
     user_id = _auth(circle_id)
     if kind not in ("medication", "appointment", "task"):
@@ -137,7 +137,7 @@ def propose_care_plan_change(circle_id: str, kind: str, payload: dict,
                           detail={"kind": kind, "rationale": rationale, "source_ref": source_ref}))
         db.commit()
         return {"pending_change_id": item.id, "status": "pending_family_approval",
-                "note": "A family owner/member must approve this in the Ahtama app before it enters the plan."}
+                "note": "A family owner/member must approve this in the Ihtama app before it enters the plan."}
     finally:
         db.close()
 

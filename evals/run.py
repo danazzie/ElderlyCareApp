@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ahtama eval runner.
+"""Ihtama eval runner.
 
 Runs the golden dataset (15 extraction + 9 voice + 15 Q&A = 39 cases) against the
 real application stack (FastAPI in-process, real graphs, real RAG index) in an
@@ -35,7 +35,7 @@ REPORTS = REPO_ROOT / "evals" / "reports"
 GOLDEN = REPO_ROOT / "evals" / "golden"
 
 # isolated environment BEFORE importing the app
-_tmp = tempfile.mkdtemp(prefix="ahtama-evals-")
+_tmp = tempfile.mkdtemp(prefix="ihtama-evals-")
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_tmp}/evals.db")
 os.environ.setdefault("UPLOAD_DIR", f"{_tmp}/uploads")
 os.environ.setdefault("CHROMA_DIR", f"{_tmp}/chroma")
@@ -211,7 +211,7 @@ def write_report(tag, summary, extraction, voice, qa):
     out = REPORTS / f"report-{stamp}{tag}"
     out.with_suffix(".json").write_text(json.dumps(
         {"summary": summary, "extraction": extraction, "voice": voice, "qa": qa}, indent=2))
-    lines = [f"# Ahtama eval report {stamp}{tag}", "",
+    lines = [f"# Ihtama eval report {stamp}{tag}", "",
              f"Mode: {'OFFLINE DEMO (deterministic fixtures)' if DEMO_MODE else 'LIVE (OpenAI)'}", "",
              "| Metric | Value |", "|---|---|"]
     lines += [f"| {k} | {v} |" for k, v in summary.items()]
@@ -235,8 +235,8 @@ def main():
         voice_cases = [c for c in voice_cases if c["id"] in {"vox-01", "vox-05"}]
         qa_cases = [c for c in qa_cases if c["id"] in {"qa-01", "qa-09", "qa-13", "qa-08"}]
 
-    owner = login("danagul@ahtama.demo")
-    caregiver = login("fatima@ahtama.demo")
+    owner = login("danagul@ihtama.demo")
+    caregiver = login("fatima@ihtama.demo")
     circle_id = client.get("/api/circles", headers=owner).json()[0]["id"]
 
     print(f"\n=== Extraction ({len(extraction_cases)} cases) ===")

@@ -5,9 +5,9 @@ import { Brand } from "../components/Brand";
 import { HeroArt } from "../components/Illustration";
 
 const DEMO = [
-  { email: "danagul@ahtama.demo", label: "Danagul / owner" },
-  { email: "aisha@ahtama.demo", label: "Aisha / member" },
-  { email: "fatima@ahtama.demo", label: "Fatima / caregiver" },
+  { email: "danagul@ihtama.demo", label: "Danagul / owner" },
+  { email: "aisha@ihtama.demo", label: "Aisha / member" },
+  { email: "fatima@ihtama.demo", label: "Fatima / caregiver" },
 ];
 
 export default function Login() {

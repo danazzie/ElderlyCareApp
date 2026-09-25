@@ -1,15 +1,15 @@
-# Ahtama — AI care coordinator for families
+# Ihtama — AI care coordinator for families
 
 > One parent. Many carers. One trusted care record.
 
-Ahtama is an AI care coordinator for families looking after an elderly parent.
+Ihtama is an AI care coordinator for families looking after an elderly parent.
 Care information today is scattered across WhatsApp chats, photos of prescriptions,
-paper notebooks and one overloaded relative. Ahtama turns doctors' letters,
+paper notebooks and one overloaded relative. Ihtama turns doctors' letters,
 prescriptions and caregivers' voice notes into a single shared, source-linked care
 record — where **nothing enters the plan without a family member's approval**, and
 **every answer cites the exact page it came from**.
 
-Built as the LLM Engineering course final project. Positioning rule: Ahtama never
+Built as the LLM Engineering course final project. Positioning rule: Ihtama never
 diagnoses, never changes medication, never gives clinical advice — it always
 redirects those questions to the doctor while showing what the record says.
 
@@ -17,14 +17,14 @@ redirects those questions to the doctor while showing what the record says.
 
 1. **Danagul (owner)** creates a care circle for her father Ahmed, invites her sister
    Aisha (member) and caregiver Fatima (caregiver) with a code.
-2. She uploads a **discharge letter** -> Ahtama extracts medications, appointments and
+2. She uploads a **discharge letter** -> Ihtama extracts medications, appointments and
    instructions, each with a page citation -> she reviews and **approves** -> the shared
    care plan updates.
 3. **Fatima** records a 20-second **voice note** after the morning visit -> transcript ->
    structured update (meals, meds given, BP, mood) -> she confirms -> the circle sees it.
 4. **Aisha** asks *"What did the doctor say about the follow-up?"* -> answer with a
    citation chip that opens the source.
-5. Aisha asks *"Should we increase the blood-pressure pills?"* -> Ahtama **declines**,
+5. Aisha asks *"Should we increase the blood-pressure pills?"* -> Ihtama **declines**,
    shows the recorded instruction and suggests asking the doctor.
 6. Every action lands in the **audit log** — who added, approved, changed what.
 
@@ -56,7 +56,7 @@ make build
 # run
 make api
 # open http://localhost:8000 — demo logins (password: demo1234):
-#   danagul@ahtama.demo (owner) · aisha@ahtama.demo (member) · fatima@ahtama.demo (caregiver)
+#   danagul@ihtama.demo (owner) · aisha@ihtama.demo (member) · fatima@ihtama.demo (caregiver)
 # invite code for new users: AHMED123
 ```
 
@@ -80,10 +80,10 @@ make evals-ab    # A/B experiment (RAG variant A vs B)
 // claude_desktop_config.json
 {
   "mcpServers": {
-    "ahtama": {
-      "command": "/path/to/ahtama/.venv/bin/python",
-      "args": ["/path/to/ahtama/services/mcp/server.py"],
-      "env": { "AHTAMA_TOKEN": "<JWT from POST /api/auth/login>" }
+    "ihtama": {
+      "command": "/path/to/ihtama/.venv/bin/python",
+      "args": ["/path/to/ihtama/services/mcp/server.py"],
+      "env": { "IHTAMA_TOKEN": "<JWT from POST /api/auth/login>" }
     }
   }
 }
@@ -113,10 +113,10 @@ create *pending* items that a family member must approve in the app.
 ## Repository layout
 
 ```
-ahtama/
+ihtama/
   apps/web/                 # React PWA (desktop + mobile responsive)
   services/api/             # FastAPI + LangGraph graphs + RAG + guardrails
-  services/mcp/             # Ahtama MCP server (stdio / streamable HTTP)
+  services/mcp/             # Ihtama MCP server (stdio / streamable HTTP)
   skills/care-document-review/SKILL.md
   evals/                    # golden dataset, runner, judges, reports
   docs/                     # ARCHITECTURE.md · EVALS.md · PRESENTATION.md

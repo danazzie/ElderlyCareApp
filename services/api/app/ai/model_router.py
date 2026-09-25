@@ -18,7 +18,7 @@ from typing import Any
 
 from ..config import DEMO_MODE, settings
 
-log = logging.getLogger("ahtama.models")
+log = logging.getLogger("ihtama.models")
 
 _TIERS = {
     "extraction": lambda: settings.extraction_model,
@@ -62,7 +62,7 @@ class ModelRouter:
             kwargs["model_kwargs"] = {"response_format": {"type": "json_object"}}
         messages = [SystemMessage(content=system), HumanMessage(content=user_content)]
         try:
-            return ChatOpenAI(**kwargs).invoke(messages, config={"run_name": f"ahtama:{task}"}).content
+            return ChatOpenAI(**kwargs).invoke(messages, config={"run_name": f"ihtama:{task}"}).content
         except Exception as exc:  # fallback chain
             log.warning("OpenAI failed for task=%s (%s); trying fallback", task, exc)
             if settings.anthropic_api_key:
@@ -75,7 +75,7 @@ class ModelRouter:
                     api_key=settings.anthropic_api_key,
                     tags=[f"task:{task}", "fallback:anthropic"],
                 )
-                return llm.invoke(messages, config={"run_name": f"ahtama:{task}:fallback"}).content
+                return llm.invoke(messages, config={"run_name": f"ihtama:{task}:fallback"}).content
             raise
 
     # ---------------- speech to text ----------------
