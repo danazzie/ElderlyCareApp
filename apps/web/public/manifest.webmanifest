@@ -1,0 +1,12 @@
+{
+  "name": "Ahtama — family care record",
+  "short_name": "Ahtama",
+  "description": "One parent. Many carers. One trusted care record.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#2FA36B",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

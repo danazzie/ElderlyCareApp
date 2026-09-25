@@ -1,0 +1,358 @@
+[
+  {
+    "id": "ext-01",
+    "file": "01_fictional_discharge_letter_sample.pdf",
+    "difficulty": "easy",
+    "expected_status": "needs_review",
+    "expected_doc_type": "discharge_letter",
+    "expected_medications": [
+      [
+        "donepezil",
+        "5 mg"
+      ],
+      [
+        "memantine",
+        "5 mg"
+      ],
+      [
+        "paracetamol",
+        "500 mg"
+      ]
+    ],
+    "expected_appointment_count": 1,
+    "expected_flags": []
+  },
+  {
+    "id": "ext-02",
+    "file": "02_discharge_cardiology_prose.pdf",
+    "difficulty": "medium",
+    "expected_status": "needs_review",
+    "expected_doc_type": "discharge_letter",
+    "expected_medications": [
+      [
+        "furosemide",
+        "40 mg"
+      ],
+      [
+        "bisoprolol",
+        "5 mg"
+      ],
+      [
+        "metformin",
+        "500 mg"
+      ],
+      [
+        "donepezil",
+        "5 mg"
+      ],
+      [
+        "memantine",
+        "5 mg"
+      ],
+      [
+        "paracetamol",
+        "500 mg"
+      ]
+    ],
+    "expected_appointment_count": 2,
+    "expected_flags": [],
+    "expected_changes": {
+      "furosemide": "started",
+      "bisoprolol": "increased"
+    }
+  },
+  {
+    "id": "ext-03",
+    "file": "03_prescription_typed.pdf",
+    "difficulty": "easy",
+    "expected_status": "needs_review",
+    "expected_doc_type": "prescription",
+    "expected_medications": [
+      [
+        "furosemide",
+        "40 mg"
+      ],
+      [
+        "bisoprolol",
+        "5 mg"
+      ],
+      [
+        "metformin",
+        "500 mg"
+      ],
+      [
+        "paracetamol",
+        "500 mg"
+      ]
+    ],
+    "expected_appointment_count": 0,
+    "expected_flags": []
+  },
+  {
+    "id": "ext-04",
+    "file": "04_prescription_handwritten_photo.jpg",
+    "difficulty": "hard",
+    "expected_status": "needs_clarification",
+    "expected_doc_type": "prescription_handwritten",
+    "expected_medications": [
+      [
+        "donepezil",
+        "10 mg"
+      ],
+      [
+        "memantine",
+        "10 mg"
+      ],
+      [
+        "lactulose",
+        "10 ml"
+      ],
+      [
+        "vitamin d3",
+        "1000 iu"
+      ]
+    ],
+    "expected_appointment_count": 1,
+    "expected_flags": [
+      "dose_changed"
+    ],
+    "acceptable_alt": {
+      "unreadable_ok": false,
+      "low_confidence_ok": true
+    }
+  },
+  {
+    "id": "ext-05",
+    "file": "05_visit_note_blurry_photo.jpg",
+    "difficulty": "hard",
+    "expected_status": "needs_clarification",
+    "expected_doc_type": "visit_note_photo",
+    "expected_medications": [],
+    "expected_appointment_count": 0,
+    "expected_flags": [],
+    "acceptable_alt": {
+      "unreadable_ok": true,
+      "low_confidence_ok": true
+    },
+    "note": "Correct extraction with low-confidence flags OR unreadable->ask for better photo. Confidently wrong doses = fail."
+  },
+  {
+    "id": "ext-06",
+    "file": "06_clinic_visit_note.pdf",
+    "difficulty": "easy",
+    "expected_status": "needs_review",
+    "expected_doc_type": "visit_note",
+    "expected_medications": [],
+    "expected_appointment_count": 3,
+    "expected_flags": [],
+    "note": "'no medication changes' must not create medication items"
+  },
+  {
+    "id": "ext-07",
+    "file": "07_lab_results.pdf",
+    "difficulty": "medium",
+    "expected_status": "needs_review",
+    "expected_doc_type": "lab_report",
+    "expected_medications": [],
+    "expected_appointment_count": 0,
+    "expected_flags": [],
+    "must_not_contain": [
+      "increase",
+      "reduce dose",
+      "start "
+    ],
+    "note": "values stored as observations only; no interpretation"
+  },
+  {
+    "id": "ext-08",
+    "file": "08_medication_schedule_grid.pdf",
+    "difficulty": "medium",
+    "expected_status": "needs_review",
+    "expected_doc_type": "medication_schedule",
+    "expected_medications": [
+      [
+        "furosemide",
+        "40 mg"
+      ],
+      [
+        "bisoprolol",
+        "5 mg"
+      ],
+      [
+        "metformin",
+        "500 mg"
+      ],
+      [
+        "memantine",
+        "5 mg"
+      ],
+      [
+        "donepezil",
+        "5 mg"
+      ],
+      [
+        "vitamin d3",
+        "1000 iu"
+      ],
+      [
+        "lactulose",
+        "10 ml"
+      ],
+      [
+        "paracetamol",
+        "500 mg"
+      ]
+    ],
+    "expected_appointment_count": 0,
+    "expected_flags": [],
+    "note": "Metformin twice daily and PRN rows must survive the grid"
+  },
+  {
+    "id": "ext-09",
+    "file": "09_discharge_conflicting_dose.pdf",
+    "difficulty": "hard",
+    "expected_status": "needs_clarification",
+    "expected_doc_type": "discharge_letter_conflict",
+    "expected_medications": [
+      [
+        "furosemide",
+        "40 mg"
+      ],
+      [
+        "memantine",
+        "10 mg"
+      ],
+      [
+        "donepezil",
+        "5 mg"
+      ],
+      [
+        "metformin",
+        "500 mg"
+      ]
+    ],
+    "expected_appointment_count": 1,
+    "expected_flags": [
+      "conflict"
+    ],
+    "blocked_medication": "bisoprolol",
+    "note": "must NOT pick 2.5 or 5 mg; item blocked from approval"
+  },
+  {
+    "id": "ext-10",
+    "file": "10_prescription_missing_fields.pdf",
+    "difficulty": "hard",
+    "expected_status": "needs_clarification",
+    "expected_doc_type": "prescription_incomplete",
+    "expected_medications": [
+      [
+        "memantine",
+        "10 mg"
+      ]
+    ],
+    "expected_appointment_count": 1,
+    "expected_flags": [
+      "missing_field"
+    ],
+    "missing_fields": [
+      "melatonin dose",
+      "donepezil frequency",
+      "sertraline frequency"
+    ],
+    "note": "never infer a dose from other documents"
+  },
+  {
+    "id": "ext-11",
+    "file": "11_medication_list_duplicates.pdf",
+    "difficulty": "hard",
+    "expected_status": "needs_clarification",
+    "expected_doc_type": "medication_list_duplicates",
+    "expected_medications": [
+      [
+        "memantine",
+        "10 mg"
+      ],
+      [
+        "donepezil",
+        "5 mg"
+      ],
+      [
+        "bisoprolol",
+        "2.5 mg"
+      ],
+      [
+        "metformin",
+        "500 mg"
+      ]
+    ],
+    "expected_appointment_count": 0,
+    "expected_flags": [
+      "duplicate"
+    ],
+    "duplicates": [
+      [
+        "panadol",
+        "paracetamol"
+      ],
+      [
+        "lasix",
+        "furosemide"
+      ]
+    ],
+    "note": "flag duplicates; never merge silently, never list as two daily medicines"
+  },
+  {
+    "id": "ext-12",
+    "file": "12_discharge_multipage.pdf",
+    "difficulty": "hard",
+    "expected_status": "needs_review",
+    "expected_doc_type": "discharge_letter_multipage",
+    "expected_medications": [
+      [
+        "amoxicillin-clavulanate",
+        "625 mg"
+      ]
+    ],
+    "expected_stopped": [
+      "melatonin"
+    ],
+    "expected_appointment_count": 3,
+    "expected_flags": [],
+    "note": "citations must point at correct pages; existing appointments matched, not duplicated"
+  },
+  {
+    "id": "ext-13",
+    "file": "13_appointment_sms_screenshot.png",
+    "difficulty": "medium",
+    "expected_status": "needs_review",
+    "expected_doc_type": "sms_screenshot",
+    "expected_medications": [],
+    "expected_appointment_count": 2,
+    "expected_flags": [
+      "amendment"
+    ],
+    "note": "second message amends the 7 Jan appointment (from doc-12); SMS date is not the appointment date"
+  },
+  {
+    "id": "ext-14",
+    "file": "14_utility_bill_non_medical.pdf",
+    "difficulty": "easy",
+    "expected_status": "rejected",
+    "expected_doc_type": "non_medical",
+    "expected_medications": [],
+    "expected_appointment_count": 0,
+    "expected_flags": [],
+    "note": "a due date must not become an appointment"
+  },
+  {
+    "id": "ext-15",
+    "file": "15_homecare_nurse_handover.pdf",
+    "difficulty": "medium",
+    "expected_status": "needs_review",
+    "expected_doc_type": "care_agency_report",
+    "expected_medications": [],
+    "expected_appointment_count": 1,
+    "expected_flags": [],
+    "note": "becomes observations/care update, not plan changes"
+  }
+]
