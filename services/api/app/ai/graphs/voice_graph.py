@@ -14,9 +14,13 @@ from typing import TypedDict
 from langgraph.graph import END, StateGraph
 from langgraph.types import interrupt
 
+import re
+from datetime import timedelta
+
 from ...db import SessionLocal
-from ...models import AuditEvent, CareCircle, CareUpdate, User, now
+from ...models import Appointment, AuditEvent, CareCircle, CareUpdate, Medication, User, now
 from .. import prompts, rag
+from ..demo_fixtures import free_text_update
 from ..model_router import parse_json, router
 from .common import checkpointer
 
@@ -59,6 +63,15 @@ def structure(state: VoiceState) -> VoiceState:
                           tier="fast", json_mode=True,
                           context={"filename": state.get("filename", ""), "transcript": state.get("transcript", "")})
     structured = parse_json(out)
+    hint = free_text_update(state.get("transcript", ""))
+    if not structured.get("appointments") and hint.get("appointments"):
+        structured["appointments"] = hint["appointments"]
+    if not structured.get("medication_changes") and hint.get("medication_changes"):
+        structured["medication_changes"] = hint["medication_changes"]
+    structured.setdefault("appointments", [])
+    structured.setdefault("medication_changes", [])
+    if structured["appointments"] or structured["medication_changes"]:
+        structured["has_care_facts"] = True
     db = SessionLocal()
     try:  # persist the draft so it is visible in the app before confirmation
         upd = db.get(CareUpdate, state["update_id"])
@@ -117,6 +130,67 @@ def route_confirm(state: VoiceState) -> str:
     return "discard"
 
 
+def _resolve_when(raw: str) -> str:
+    text = (raw or "").strip()
+    m = re.search(r"in\s+(one|a|two|\d+)\s+(day|week|month)s?", text, re.I)
+    if not m:
+        return text or "date TBC"
+    n = {"one": 1, "a": 1, "two": 2}.get(m.group(1).lower())
+    n = int(m.group(1)) if n is None else n
+    unit = m.group(2).lower()
+    delta = timedelta(days=n) if unit == "day" else timedelta(weeks=n) if unit == "week" else timedelta(days=30 * n)
+    return (now() + delta).date().isoformat()
+
+
+def apply_voice_to_plan(db, circle_id: str, structured: dict) -> None:
+    """Confirmed voice notes can add follow-ups and real medication changes.
+
+    Today's medications_given log is not a prescription and must not alter the plan.
+    """
+    for raw in structured.get("appointments") or []:
+        if not isinstance(raw, dict):
+            continue
+        what = str(raw.get("what") or raw.get("with_whom") or "").strip()
+        if len(what) < 3:
+            continue
+        when = _resolve_when(str(raw.get("when", "")))
+        exists = any(
+            a.what.lower() == what.lower() and a.when_text == when
+            for a in db.query(Appointment).filter(Appointment.circle_id == circle_id).all()
+        )
+        if not exists:
+            db.add(Appointment(
+                circle_id=circle_id, when_text=when,
+                where_text=str(raw.get("where", "")), what=what,
+                with_whom=str(raw.get("with_whom", "")),
+            ))
+    for raw in structured.get("medication_changes") or []:
+        if not isinstance(raw, dict):
+            continue
+        name = str(raw.get("name", "")).strip()
+        if len(name) < 3:
+            continue
+        change = str(raw.get("change", "STARTED")).upper()
+        existing = next((m for m in db.query(Medication).filter(
+            Medication.circle_id == circle_id, Medication.active.is_(True)).all()
+            if m.name.lower() == name.lower()), None)
+        if change == "STOPPED":
+            if existing:
+                existing.active = False
+            continue
+        if existing:
+            if raw.get("dose"):
+                existing.dose_text = str(raw.get("dose"))
+            if raw.get("frequency"):
+                existing.schedule_text = str(raw.get("frequency"))
+        else:
+            db.add(Medication(
+                circle_id=circle_id, name=name,
+                dose_text=str(raw.get("dose", "")),
+                schedule_text=str(raw.get("frequency", "")),
+            ))
+
+
 def save(state: VoiceState) -> VoiceState:
     structured = state.get("confirm", {}).get("structured") or state.get("structured", {})
     db = SessionLocal()
@@ -127,6 +201,7 @@ def save(state: VoiceState) -> VoiceState:
         upd.status = "confirmed"
         upd.confirmed_at = now()
         author = db.get(User, state["user_id"])
+        apply_voice_to_plan(db, state["circle_id"], structured)
         db.add(AuditEvent(circle_id=state["circle_id"], actor_user_id=state["user_id"],
                           action="care_update_confirmed", entity=f"care_update:{state['update_id']}",
                           detail={"red_flags": state.get("red_flags", [])}))

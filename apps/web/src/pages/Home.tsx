@@ -193,7 +193,7 @@ export default function Home() {
                 <span className="tiny">{m.schedule}</span>
               </div>
             ))}
-            {today.medications_count === 0 && <div className="muted">Approve a prescription to fill this list.</div>}
+            {today.medications_count === 0 && <div className="muted">Approve a prescription, or confirm a voice update that starts a medicine.</div>}
           </div>
           {role === "caregiver" && (
             <div className="card stack">

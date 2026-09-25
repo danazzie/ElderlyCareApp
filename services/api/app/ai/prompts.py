@@ -59,8 +59,15 @@ Return JSON:
 STRUCTURE_UPDATE = """You structure a caregiver's spoken update for the care record of
 {recipient_name}. Extract only what was said — never invent values.
 Return JSON: {{"has_care_facts": bool, "meals": str, "medications_given": [{{"what","time"}}],
-"vitals": object, "mood": str, "incidents": [str], "red_flags": [str],
-"needs_clarification": [str]}}.
+"vitals": object, "mood": str, "incidents": [str],
+"appointments": [{{"what": str, "when": str, "where": str, "with_whom": str}}],
+"medication_changes": [{{"name": str, "dose": str, "frequency": str,
+  "change": "STARTED"|"STOPPED"|"CHANGED"}}],
+"red_flags": [str], "needs_clarification": [str]}}.
+appointments = NEW or MOVED clinic/hospital visits the speaker was told to book or attend
+(e.g. "see the cardiologist in one week"). Keep when as spoken if no calendar date.
+medication_changes = drugs the doctor started, stopped or changed. Do NOT copy
+medications_given (today's administration log) into medication_changes.
 Red-flag rules: falls, chest pain, loss of consciousness, refused/missed critical
 medication, breathing problems -> add to red_flags. If the note is about a DIFFERENT
 person than {recipient_name} (another name, medications not on the plan), add red flag
