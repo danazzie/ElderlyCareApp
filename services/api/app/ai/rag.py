@@ -100,13 +100,46 @@ def _circle_chunks(circle_id: str) -> list[dict]:
     ]
 
 
+def plan_snapshot(circle_id: str) -> list[dict]:
+    """Live care plan as a retrieval chunk so Ask can see tonight's meds and tasks."""
+    from ..db import SessionLocal
+    from ..models import Appointment, Medication, Task
+    db = SessionLocal()
+    try:
+        meds = db.query(Medication).filter(Medication.circle_id == circle_id,
+                                           Medication.active.is_(True)).order_by(Medication.name).all()
+        tasks = db.query(Task).filter(Task.circle_id == circle_id, Task.status == "open").all()
+        appts = db.query(Appointment).filter(Appointment.circle_id == circle_id,
+                                             Appointment.status.notin_(["done", "cancelled"])).all()
+    finally:
+        db.close()
+    parts = []
+    if meds:
+        parts.append("Medications on the plan:\n" + "\n".join(
+            f"- {m.name} {m.dose_text} {m.schedule_text}".strip() for m in meds))
+    if tasks:
+        parts.append("Open tasks:\n" + "\n".join(
+            f"- {t.title}" + (f" (due {t.due_text})" if t.due_text else "") for t in tasks))
+    if appts:
+        parts.append("Appointments:\n" + "\n".join(
+            f"- {a.what} {a.when_text} {a.where_text}".strip() for a in appts))
+    if not parts:
+        return []
+    return [{
+        "id": f"plan:{circle_id}", "text": "\n\n".join(parts), "circle_id": circle_id,
+        "doc_id": "care_plan", "doc_name": "Care plan", "page": 1,
+        "source_type": "care_plan", "score": 1.0,
+    }]
+
+
 def retrieve(circle_id: str, query: str, k: int | None = None, *, variant: str = "A") -> list[dict]:
     """variant A: hybrid top-6. variant B: hybrid top-12 candidates -> rerank -> top-4.
     Both are strictly filtered by circle_id (tenant isolation)."""
     k = k or settings.rag_top_k
+    plan = plan_snapshot(circle_id)
     pool = _circle_chunks(circle_id)
     if not pool:
-        return []
+        return plan
     n_candidates = 12 if variant == "B" else k
 
     # vector half
@@ -135,7 +168,9 @@ def retrieve(circle_id: str, query: str, k: int | None = None, *, variant: str =
 
     if variant == "B":
         candidates = _rerank(query, candidates)[:4]
-    return candidates[:k]
+    docs = candidates[:k]
+    seen = {c["id"] for c in plan}
+    return plan + [c for c in docs if c["id"] not in seen]
 
 
 def _rerank(query: str, candidates: list[dict]) -> list[dict]:

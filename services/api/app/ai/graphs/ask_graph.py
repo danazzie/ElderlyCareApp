@@ -87,15 +87,18 @@ def retrieve(state: AskState) -> AskState:
 def answer_with_citations(state: AskState) -> AskState:
     chunks = state.get("chunks", [])
     excerpts = "\n\n".join(f"[{c['doc_name']}, p.{c['page']}]\n{c['text']}" for c in chunks)
-    out = router.complete("answer", prompts.ANSWER_WITH_CITATIONS,
+    prompt = prompts.GENERAL_CARE_ANSWER if state.get("route") == "general_care" else prompts.ANSWER_WITH_CITATIONS
+    out = router.complete("answer", prompt,
                           f"Question: {state['question']}\n\nRecord excerpts:\n{excerpts or '(none found)'}",
                           tier="answer", json_mode=True,
-                          temperature=0.2, context={"chunks": chunks})
+                          temperature=0.2, context={"chunks": chunks, "route": state.get("route", "record_fact")})
     result = parse_json(out)
     return {"answer": result.get("answer", ""), "citations": result.get("citations", [])}
 
 
 def faithfulness_check(state: AskState) -> AskState:
+    if state.get("route") == "general_care":
+        return {"faithful": True}
     if not state.get("chunks"):
         return {"faithful": True}  # "not in the records" answers have nothing to verify
     excerpts = "\n\n".join(c["text"] for c in state["chunks"])
