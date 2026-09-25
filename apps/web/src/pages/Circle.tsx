@@ -13,9 +13,11 @@ function auditIcon(action: string): { name: IconName; tone: "green" | "coral" | 
 }
 
 export default function Circle({ activityOnly = false }: { activityOnly?: boolean }) {
-  const { circle, role } = useAuth();
+  const { circle, role, refresh } = useAuth();
   const [audit, setAudit] = useState<any[]>([]);
   const [updates, setUpdates] = useState<any[]>([]);
+  const [error, setError] = useState("");
+  const canManage = ["owner", "member"].includes(role);
 
   useEffect(() => {
     if (!circle) return;
@@ -26,6 +28,24 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
   if (!circle) return null;
   const family = circle.members.filter((m) => ["owner", "member"].includes(m.role));
   const caregivers = circle.members.filter((m) => m.role === "caregiver");
+  const pending = circle.pending_members ?? [];
+
+  const review = async (userId: string, action: "approved" | "rejected") => {
+    setError("");
+    try {
+      await api.reviewJoin(circle.id, userId, action);
+      await refresh();
+    } catch (e: any) { setError(e.message); }
+  };
+
+  const removeCaregiver = async (userId: string, name: string) => {
+    if (!window.confirm(`Remove ${name} from this circle?`)) return;
+    setError("");
+    try {
+      await api.removeMember(circle.id, userId);
+      await refresh();
+    } catch (e: any) { setError(e.message); }
+  };
 
   const activity = (
     <>
@@ -72,8 +92,27 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
   return (
     <div>
       <h2 style={{ marginBottom: 14 }}>{circle.recipient_name}'s circle</h2>
+      {error && <div className="alert-banner" style={{ marginBottom: 12 }}><Icon name="alert" size={16} /> {error}</div>}
       <div className="grid cols-2">
         <div className="stack">
+          {canManage && pending.length > 0 && (
+            <>
+              <div className="section-title">Waiting for approval</div>
+              <div className="card">
+                {pending.map((m) => (
+                  <div className="list-item" key={m.user_id}>
+                    <div className="avatar amber">{m.name[0]}</div>
+                    <div style={{ flex: 1 }}>
+                      <b>{m.name}</b>
+                      <div className="tiny">{m.email} · wants to join as {m.role}</div>
+                    </div>
+                    <button className="btn small primary" onClick={() => review(m.user_id, "approved")}>Approve</button>
+                    <button className="btn small ghost" onClick={() => review(m.user_id, "rejected")}>Decline</button>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
           <div className="section-title">Family</div>
           <div className="card">
             {family.map((m) => (
@@ -97,6 +136,9 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
                   <div className="tiny">{m.email}</div>
                 </div>
                 <span className="badge amber">caregiver</span>
+                {canManage && (
+                  <button className="btn small ghost" onClick={() => removeCaregiver(m.user_id, m.name)}>Remove</button>
+                )}
               </div>
             ))}
             {caregivers.length === 0 && <div className="muted">No caregivers yet  -  share the invite code.</div>}
@@ -104,7 +146,7 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
           {role === "owner" && (
             <div className="card stack">
               <b>Invite to this circle</b>
-              <div className="muted">Share this code  -  family joins as members, caregivers as caregivers:</div>
+              <div className="muted">Share this code. New people stay pending until family approves:</div>
               <div className="row">
                 <code style={{ background: "var(--sunken)", padding: "8px 14px", borderRadius: 10, fontWeight: 800, letterSpacing: 1 }}>{circle.invite_code}</code>
                 <button className="btn small ghost" onClick={() => navigator.clipboard?.writeText(circle.invite_code)}>Copy</button>

@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from ..db import get_db
 from ..models import (Appointment, AuditEvent, CareCircle, CareUpdate, Document,
-                      Medication, Task, User)
+                      Medication, Membership, Task, User)
 from ..security import current_user, require_membership
 
 router = APIRouter(tags=["plan"])
@@ -27,6 +27,77 @@ def get_plan(circle_id: str, user: User = Depends(current_user), db: Session = D
         "tasks": [{"id": t.id, "title": t.title, "due": t.due_text, "status": t.status,
                    "assignee": t.assignee_user_id, "source": t.source} for t in tasks],
     }
+
+
+class MedicationIn(BaseModel):
+    name: str
+    dose: str = ""
+    schedule: str = ""
+
+
+def _med_out(m: Medication) -> dict:
+    return {"id": m.id, "name": m.name, "dose": m.dose_text, "schedule": m.schedule_text,
+            "source_item_id": m.source_item_id}
+
+
+@router.post("/circles/{circle_id}/medications")
+def add_medication(circle_id: str, data: MedicationIn, user: User = Depends(current_user),
+                   db: Session = Depends(get_db)):
+    require_membership(db, user, circle_id, roles=["owner", "member"])
+    name = data.name.strip()
+    if len(name) < 2:
+        raise HTTPException(400, "Medication name is required")
+    existing = next((m for m in db.query(Medication).filter(
+        Medication.circle_id == circle_id, Medication.active.is_(True)).all()
+        if m.name.lower() == name.lower()), None)
+    if existing:
+        existing.dose_text = data.dose.strip() or existing.dose_text
+        existing.schedule_text = data.schedule.strip() or existing.schedule_text
+        med = existing
+        action = "medication_edited"
+    else:
+        med = Medication(circle_id=circle_id, name=name, dose_text=data.dose.strip(),
+                         schedule_text=data.schedule.strip())
+        db.add(med)
+        action = "medication_added"
+    db.add(AuditEvent(circle_id=circle_id, actor_user_id=user.id, action=action,
+                      entity=f"medication:{med.id}",
+                      detail={"name": med.name, "dose": med.dose_text, "schedule": med.schedule_text}))
+    db.commit()
+    return _med_out(med)
+
+
+@router.patch("/medications/{med_id}")
+def edit_medication(med_id: str, data: MedicationIn, user: User = Depends(current_user),
+                    db: Session = Depends(get_db)):
+    med = db.get(Medication, med_id)
+    if not med or not med.active:
+        raise HTTPException(404, "Medication not found")
+    require_membership(db, user, med.circle_id, roles=["owner", "member"])
+    name = data.name.strip()
+    if len(name) < 2:
+        raise HTTPException(400, "Medication name is required")
+    med.name = name
+    med.dose_text = data.dose.strip()
+    med.schedule_text = data.schedule.strip()
+    db.add(AuditEvent(circle_id=med.circle_id, actor_user_id=user.id, action="medication_edited",
+                      entity=f"medication:{med.id}",
+                      detail={"name": med.name, "dose": med.dose_text, "schedule": med.schedule_text}))
+    db.commit()
+    return _med_out(med)
+
+
+@router.post("/medications/{med_id}/stop")
+def stop_medication(med_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    med = db.get(Medication, med_id)
+    if not med or not med.active:
+        raise HTTPException(404, "Medication not found")
+    require_membership(db, user, med.circle_id, roles=["owner", "member"])
+    med.active = False
+    db.add(AuditEvent(circle_id=med.circle_id, actor_user_id=user.id, action="medication_stopped",
+                      entity=f"medication:{med.id}", detail={"name": med.name}))
+    db.commit()
+    return {"id": med.id, "active": False}
 
 
 class TaskIn(BaseModel):
@@ -79,6 +150,8 @@ def today(circle_id: str, user: User = Depends(current_user), db: Session = Depe
                                                     CareUpdate.status == "confirmed")
                         .order_by(CareUpdate.created_at.desc()).limit(10).all())
     alerts = [f for u in red_flag_updates for f in (u.red_flags or [])][:3]
+    pending = (db.query(Membership, User).join(User, Membership.user_id == User.id)
+               .filter(Membership.circle_id == circle_id, Membership.status == "pending").all())
     return {
         "recipient_name": circle.recipient_name,
         "approvals_waiting": [{"id": d.id, "filename": d.filename, "doc_type": d.doc_type,
@@ -91,4 +164,6 @@ def today(circle_id: str, user: User = Depends(current_user), db: Session = Depe
         "medications_count": len(meds),
         "medications": [{"name": m.name, "dose": m.dose_text, "schedule": m.schedule_text} for m in meds],
         "alerts": alerts,
+        "join_requests": [{"user_id": m.user_id, "name": u.name, "email": u.email, "role": m.role}
+                          for m, u in pending],
     }

@@ -33,10 +33,12 @@ async function req<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 // ---- types ----
-export type Member = { user_id: string; name: string; email: string; role: string };
+export type Member = { user_id: string; name: string; email: string; role: string; status?: string };
+export type PendingJoin = { circle_id: string; recipient_name: string; role: string; status: string };
 export type Circle = {
   id: string; recipient_name: string; recipient_dob: string; recipient_notes: string;
-  invite_code: string; consent_recorded_at: string | null; members: Member[]; my_role?: string;
+  invite_code: string; consent_recorded_at: string | null; members: Member[];
+  pending_members?: Member[]; my_role?: string; join_status?: string;
 };
 export type ExtractedItem = {
   id: string; kind: string; payload: Record<string, any>; source_page: number;
@@ -67,6 +69,7 @@ export type Today = {
   open_tasks: number; medications_count: number;
   medications: { name: string; dose: string; schedule: string }[];
   alerts: string[];
+  join_requests?: { user_id: string; name: string; email: string; role: string }[];
 };
 
 // ---- calls ----
@@ -80,6 +83,10 @@ export const api = {
   createCircle: (data: any) => req<Circle>("/circles", { method: "POST", body: JSON.stringify(data) }),
   joinCircle: (invite_code: string, role: string) =>
     req<Circle>("/circles/join", { method: "POST", body: JSON.stringify({ invite_code, role }) }),
+  reviewJoin: (circleId: string, userId: string, action: "approved" | "rejected") =>
+    req(`/circles/${circleId}/memberships/${userId}/review`, { method: "POST", body: JSON.stringify({ action }) }),
+  removeMember: (circleId: string, userId: string) =>
+    req(`/circles/${circleId}/memberships/${userId}/remove`, { method: "POST" }),
   circle: (id: string) => req<Circle>(`/circles/${id}`),
   audit: (id: string) => req<any[]>(`/circles/${id}/audit`),
   today: (id: string) => req<Today>(`/circles/${id}/today`),
@@ -87,6 +94,12 @@ export const api = {
   toggleTask: (taskId: string) => req(`/tasks/${taskId}/toggle`, { method: "POST" }),
   addTask: (circleId: string, title: string, due = "") =>
     req(`/circles/${circleId}/tasks`, { method: "POST", body: JSON.stringify({ title, due }) }),
+  addMedication: (circleId: string, name: string, dose = "", schedule = "") =>
+    req(`/circles/${circleId}/medications`, { method: "POST", body: JSON.stringify({ name, dose, schedule }) }),
+  editMedication: (medId: string, name: string, dose = "", schedule = "") =>
+    req(`/medications/${medId}`, { method: "PATCH", body: JSON.stringify({ name, dose, schedule }) }),
+  stopMedication: (medId: string) =>
+    req(`/medications/${medId}/stop`, { method: "POST" }),
   documents: (id: string) => req<Doc[]>(`/circles/${id}/documents`),
   document: (docId: string) => req<Doc>(`/documents/${docId}`),
   uploadDocument: (circleId: string, file: File) => {
