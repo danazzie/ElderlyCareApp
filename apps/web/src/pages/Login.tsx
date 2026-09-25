@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth";
+import { Brand } from "../components/Brand";
+import { HeroArt } from "../components/Illustration";
 
 const DEMO = [
-  { email: "danagul@ahtama.demo", label: "Danagul · owner" },
-  { email: "aisha@ahtama.demo", label: "Aisha · member" },
-  { email: "fatima@ahtama.demo", label: "Fatima · caregiver" },
+  { email: "danagul@ahtama.demo", label: "Danagul / owner" },
+  { email: "aisha@ahtama.demo", label: "Aisha / member" },
+  { email: "fatima@ahtama.demo", label: "Fatima / caregiver" },
 ];
 
 export default function Login() {
@@ -28,16 +30,16 @@ export default function Login() {
 
   return (
     <div className="hero">
-      <div className="art">🧕👴🏽</div>
+      <div className="hero-brand"><Brand size={36} light /></div>
+      <div className="art"><HeroArt /></div>
       <div className="panel">
-        <div className="tiny" style={{ color: "rgba(255,255,255,0.8)", marginBottom: 6 }}>اهتمام · Ahtama</div>
-        <h1>Care & Peace of Mind for Your Parents</h1>
-        <p>One shared care record for the whole family — doctors' letters, daily updates and
+        <h1>Care and peace of mind for your parents</h1>
+        <p>One shared care record for the whole family  -  doctors' letters, daily updates and
           medications, every fact linked to its source.</p>
 
         {mode === "intro" && (
           <div className="stack">
-            <button className="btn dark" onClick={() => setMode("login")}>Get started ›</button>
+            <button className="btn dark" onClick={() => setMode("login")}>Get started</button>
             <button className="btn" style={{ color: "#fff" }} onClick={() => setMode("join")}>
               I have an invitation code
             </button>

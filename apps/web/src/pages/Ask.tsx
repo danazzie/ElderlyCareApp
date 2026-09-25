@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { api, ChatMsg } from "../api";
 import { useAuth } from "../auth";
+import { Icon, IconTile } from "../components/Icon";
 
 const SUGGESTIONS = [
   "What's due tonight?",
@@ -47,19 +48,27 @@ export default function Ask() {
         {msgs.length === 0 && (
           <div className="stack" style={{ marginTop: 12 }}>
             {SUGGESTIONS.map((s) => (
-              <button key={s} className="card" style={{ textAlign: "left", color: "var(--green-dark)", fontWeight: 600 }}
-                onClick={() => send(s)}>✳ {s}</button>
+              <button key={s} className="card suggest" onClick={() => send(s)}>
+                <IconTile name="sparkles" tone="green" size={32} iconSize={16} />
+                {s}
+              </button>
             ))}
           </div>
         )}
         {msgs.map((m) => (
           <div key={m.id} className={`bubble ${m.role}${m.route === "clinical" ? " clinical" : ""}`}>
-            {m.route === "clinical" && <div className="tiny" style={{ marginBottom: 4 }}>🩺 A question for the doctor</div>}
+            {m.route === "clinical" && (
+              <div className="tiny row" style={{ marginBottom: 4 }}>
+                <Icon name="stethoscope" size={13} /> A question for the doctor
+              </div>
+            )}
             {m.content}
             {m.citations.length > 0 && (
               <div>
                 {m.citations.map((c, i) => (
-                  <span key={i} className="cite-chip" title={c.quote}>📄 {c.doc_name} · p.{c.page}</span>
+                  <span key={i} className="cite-chip" title={c.quote}>
+                    <Icon name="file" size={12} /> {c.doc_name} � p.{c.page}
+                  </span>
                 ))}
               </div>
             )}
@@ -70,11 +79,12 @@ export default function Ask() {
       </div>
 
       <div className="row" style={{ position: "sticky", bottom: 84, background: "var(--bg)", paddingTop: 8 }}>
-        <input className="input" placeholder="Ask about the care record…" value={input}
+        <input className="input" placeholder="Ask about the care record..." value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && send(input)} />
-        <button className="btn primary" style={{ borderRadius: "50%", width: 46, height: 46, padding: 0, flexShrink: 0 }}
-          onClick={() => send(input)} disabled={busy}>➤</button>
+        <button className="btn primary icon-only" onClick={() => send(input)} disabled={busy} aria-label="Send">
+          <Icon name="send" size={18} />
+        </button>
       </div>
     </div>
   );

@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { api } from "../api";
 import { useAuth } from "../auth";
+import { Icon, IconName, IconTile } from "../components/Icon";
 
 const ROLE_BADGE: Record<string, string> = { owner: "green", member: "grey", caregiver: "amber", viewer: "grey" };
+
+function auditIcon(action: string): { name: IconName; tone: "green" | "coral" | "amber" | "ink" } {
+  if (action.includes("approved")) return { name: "circleCheck", tone: "green" };
+  if (action.includes("rejected")) return { name: "ban", tone: "coral" };
+  if (action.includes("red_flag")) return { name: "alert", tone: "amber" };
+  return { name: "scroll", tone: "ink" };
+}
 
 export default function Circle({ activityOnly = false }: { activityOnly?: boolean }) {
   const { circle, role } = useAuth();
@@ -25,28 +33,35 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
       <div className="card">
         {updates.filter((u) => u.status === "confirmed").map((u) => (
           <div className="list-item" key={u.id}>
-            <div className="avatar coral">🎙</div>
+            <IconTile name="mic" tone="coral" />
             <div style={{ flex: 1 }}>
               <b>{u.author}</b> <span className="tiny">{new Date(u.created_at).toLocaleString()}</span>
-              {u.red_flags?.length > 0 && <div className="alert-banner" style={{ margin: "6px 0" }}>⚠ {u.red_flags.join("; ")}</div>}
-              <div className="muted">{u.transcript?.slice(0, 160)}{u.transcript?.length > 160 ? "…" : ""}</div>
+              {u.red_flags?.length > 0 && (
+                <div className="alert-banner" style={{ margin: "6px 0" }}>
+                  <Icon name="alert" size={14} /> {u.red_flags.join("; ")}
+                </div>
+              )}
+              <div className="muted">{u.transcript?.slice(0, 160)}{u.transcript?.length > 160 ? "..." : ""}</div>
             </div>
           </div>
         ))}
         {updates.filter((u) => u.status === "confirmed").length === 0 && <div className="muted">No confirmed updates yet.</div>}
       </div>
 
-      <div className="section-title">Audit log — who did what</div>
+      <div className="section-title">Audit log  -  who did what</div>
       <div className="card">
-        {audit.map((e) => (
-          <div className="list-item" key={e.id}>
-            <div className="avatar">{e.action.includes("approved") ? "✅" : e.action.includes("rejected") ? "🚫" : e.action.includes("red_flag") ? "⚠️" : "•"}</div>
-            <div style={{ flex: 1 }}>
-              <b>{e.actor}</b> <span className="muted">{e.action.replaceAll("_", " ")}</span>
-              <div className="tiny">{new Date(e.at).toLocaleString()} · {e.entity}</div>
+        {audit.map((e) => {
+          const ic = auditIcon(e.action);
+          return (
+            <div className="list-item" key={e.id}>
+              <IconTile name={ic.name} tone={ic.tone} />
+              <div style={{ flex: 1 }}>
+                <b>{e.actor}</b> <span className="muted">{e.action.replaceAll("_", " ")}</span>
+                <div className="tiny">{new Date(e.at).toLocaleString()} � {e.entity}</div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
         {audit.length === 0 && <div className="muted">No activity yet.</div>}
       </div>
     </>
@@ -84,25 +99,25 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
                 <span className="badge amber">caregiver</span>
               </div>
             ))}
-            {caregivers.length === 0 && <div className="muted">No caregivers yet — share the invite code.</div>}
+            {caregivers.length === 0 && <div className="muted">No caregivers yet  -  share the invite code.</div>}
           </div>
           {role === "owner" && (
             <div className="card stack">
               <b>Invite to this circle</b>
-              <div className="muted">Share this code — family joins as members, caregivers as caregivers:</div>
+              <div className="muted">Share this code  -  family joins as members, caregivers as caregivers:</div>
               <div className="row">
-                <code style={{ background: "var(--bg)", padding: "8px 14px", borderRadius: 10, fontWeight: 800, letterSpacing: 1 }}>{circle.invite_code}</code>
+                <code style={{ background: "var(--sunken)", padding: "8px 14px", borderRadius: 10, fontWeight: 800, letterSpacing: 1 }}>{circle.invite_code}</code>
                 <button className="btn small ghost" onClick={() => navigator.clipboard?.writeText(circle.invite_code)}>Copy</button>
               </div>
             </div>
           )}
           <div className="card stack">
             <b>Recipient profile</b>
-            <div className="muted">{circle.recipient_name} · b. {circle.recipient_dob || "—"}</div>
+            <div className="muted">{circle.recipient_name} � b. {circle.recipient_dob || " - "}</div>
             <div className="muted">{circle.recipient_notes}</div>
             <div className="tiny">
-              Consent recorded: {circle.consent_recorded_at ? new Date(circle.consent_recorded_at).toLocaleDateString() : "not yet"} ·
-              Ahtama never gives medical advice — emergencies ? call your local emergency number.
+              Consent recorded: {circle.consent_recorded_at ? new Date(circle.consent_recorded_at).toLocaleDateString() : "not yet"} �
+              Ahtama never gives medical advice  -  emergencies: call your local emergency number.
             </div>
           </div>
         </div>
