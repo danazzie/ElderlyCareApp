@@ -41,6 +41,7 @@ export default function UploadButton({ className = "btn primary", label = "Uploa
       <button
         type="button"
         className={className}
+        style={className.includes("qa-btn") ? { width: "100%" } : undefined}
         disabled={busy}
         onClick={() => fileRef.current?.click()}
       >
