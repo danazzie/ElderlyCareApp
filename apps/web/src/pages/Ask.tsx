@@ -20,6 +20,17 @@ export default function Ask() {
   useEffect(() => { if (circle) api.messages(circle.id).then(setMsgs).catch(() => {}); }, [circle?.id]);
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs.length, busy]);
 
+  const clearChat = async () => {
+    if (!circle || !msgs.length) return;
+    if (!window.confirm("Clear this circle's Ask history? This cannot be undone.")) return;
+    try {
+      await api.clearMessages(circle.id);
+      setMsgs([]);
+    } catch (e: any) {
+      setMsgs((m) => [...m, { id: "err", role: "assistant", content: e.message, citations: [], route: "", created_at: "" }]);
+    }
+  };
+
   const send = async (q: string) => {
     if (!circle || !q.trim() || busy) return;
     setBusy(true);
@@ -38,7 +49,14 @@ export default function Ask() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", minHeight: "calc(100dvh - 140px)" }}>
-      <h2 style={{ marginBottom: 4 }}>Ask Ihtama</h2>
+      <div className="page-head" style={{ marginBottom: 4 }}>
+        <h2>Ask Ihtama</h2>
+        {msgs.length > 0 && (
+          <button className="btn small ghost" onClick={clearChat} disabled={busy}>
+            <Icon name="trash" size={15} /> Clear chat
+          </button>
+        )}
+      </div>
       <p className="muted" style={{ marginTop: 2 }}>
         Answers come only from this circle's approved records, with the source cited.
         Medical decisions are always redirected to the doctor.

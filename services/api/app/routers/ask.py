@@ -45,3 +45,11 @@ def messages(circle_id: str, user: User = Depends(current_user), db: Session = D
             .order_by(Message.created_at.asc()).limit(200).all())
     return [{"id": m.id, "role": m.role, "content": m.content, "citations": m.citations_json,
              "route": m.route, "created_at": m.created_at.isoformat()} for m in rows]
+
+
+@router.delete("/circles/{circle_id}/messages")
+def clear_messages(circle_id: str, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    require_membership(db, user, circle_id)
+    deleted = db.query(Message).filter(Message.circle_id == circle_id).delete()
+    db.commit()
+    return {"deleted": deleted}

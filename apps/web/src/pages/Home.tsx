@@ -76,7 +76,7 @@ export default function Home() {
                 <b style={{ fontSize: 18 }}>{today.recipient_name}</b>
                 <div className="muted">{circle.recipient_notes || "Care circle"}</div>
               </div>
-              <Ring done={today.medications_count} total={Math.max(today.medications_count, 1)} />
+              <Ring done={today.medications_count} total={today.medications_count} />
             </div>
             <div className="stat-grid">
               <div className="stat">
