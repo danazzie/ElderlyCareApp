@@ -10,8 +10,11 @@ export default function Plan() {
   const [newMed, setNewMed] = useState({ name: "", dose: "", schedule: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [edit, setEdit] = useState({ name: "", dose: "", schedule: "" });
+  const [newAppt, setNewAppt] = useState({ what: "", when: "", where: "" });
+  const [editingApptId, setEditingApptId] = useState<string | null>(null);
+  const [editAppt, setEditAppt] = useState({ what: "", when: "", where: "" });
   const [error, setError] = useState("");
-  const canEditMeds = ["owner", "member"].includes(role);
+  const canEditPlan = ["owner", "member"].includes(role);
 
   const load = () => { if (circle) api.plan(circle.id).then(setPlan).catch(() => {}); };
   useEffect(load, [circle?.id]);
@@ -36,6 +39,36 @@ export default function Plan() {
     } catch (e: any) { setError(e.message); }
   };
 
+  const addAppt = async () => {
+    if (!circle || !newAppt.what.trim()) return;
+    setError("");
+    try {
+      await api.addAppointment(circle.id, newAppt.what.trim(), newAppt.when.trim(), newAppt.where.trim());
+      setNewAppt({ what: "", when: "", where: "" });
+      load();
+    } catch (e: any) { setError(e.message); }
+  };
+
+  const saveAppt = async (id: string) => {
+    if (!editAppt.what.trim()) return;
+    setError("");
+    try {
+      await api.editAppointment(id, editAppt.what.trim(), editAppt.when.trim(), editAppt.where.trim());
+      setEditingApptId(null);
+      load();
+    } catch (e: any) { setError(e.message); }
+  };
+
+  const cancelAppt = async (id: string, what: string) => {
+    if (!window.confirm(`Cancel ${what} on the plan?`)) return;
+    setError("");
+    try {
+      await api.cancelAppointment(id);
+      setEditingApptId(null);
+      load();
+    } catch (e: any) { setError(e.message); }
+  };
+
   const stopMed = async (id: string, name: string) => {
     if (!window.confirm(`Stop ${name} on the plan?`)) return;
     setError("");
@@ -52,14 +85,14 @@ export default function Plan() {
     <div>
       <h2 style={{ marginBottom: 14 }}>Care plan</h2>
       <p className="muted" style={{ marginTop: -8 }}>
-        Family can add or correct medications here. Doses stay as written  -  never normalised.
+        Family can add or correct medications and appointments here. Doses stay as written  -  never normalised.
       </p>
       {error && <div className="alert-banner" style={{ marginBottom: 12 }}><Icon name="alert" size={16} /> {error}</div>}
       <div className="grid cols-2">
         <div className="stack">
           <div className="section-title">Medications</div>
           <div className="card">
-            {canEditMeds && (
+            {canEditPlan && (
               <div className="stack" style={{ gap: 8, marginBottom: 10 }}>
                 <input className="input" placeholder="Medicine name" value={newMed.name}
                   onChange={(e) => setNewMed({ ...newMed, name: e.target.value })} />
@@ -97,7 +130,7 @@ export default function Plan() {
                       <b>{m.name}</b> <span className="muted">{m.dose}</span>
                       <div className="tiny">{m.schedule}</div>
                     </div>
-                    {canEditMeds && (
+                    {canEditPlan && (
                       <button className="btn small ghost" onClick={() => { setEditingId(m.id); setEdit({ name: m.name, dose: m.dose, schedule: m.schedule }); }}>
                         <Icon name="pencil" size={14} /> Edit
                       </button>
@@ -110,15 +143,52 @@ export default function Plan() {
 
           <div className="section-title">Appointments</div>
           <div className="card">
-            {plan.appointments.length === 0 && <div className="muted">No appointments yet.</div>}
+            {canEditPlan && (
+              <div className="stack" style={{ gap: 8, marginBottom: 10 }}>
+                <input className="input" placeholder="What (e.g. Cardiology follow-up)" value={newAppt.what}
+                  onChange={(e) => setNewAppt({ ...newAppt, what: e.target.value })} />
+                <div className="row">
+                  <input className="input" placeholder="When" value={newAppt.when}
+                    onChange={(e) => setNewAppt({ ...newAppt, when: e.target.value })} />
+                  <input className="input" placeholder="Where" value={newAppt.where}
+                    onChange={(e) => setNewAppt({ ...newAppt, where: e.target.value })} />
+                </div>
+                <button className="btn small ghost" onClick={addAppt} disabled={!newAppt.what.trim()}>
+                  <Icon name="plus" size={14} /> Add appointment
+                </button>
+              </div>
+            )}
+            {plan.appointments.length === 0 && <div className="muted">No appointments on the plan yet.</div>}
             {plan.appointments.map((a) => (
               <div className="list-item" key={a.id}>
                 <IconTile name="calendar" tone="amber" />
-                <div style={{ flex: 1 }}>
-                  <b>{a.what || "Appointment"}</b>
-                  <div className="muted">{a.when}{a.where ? ` ù ${a.where}` : ""}</div>
-                </div>
-                {a.status === "rescheduled" && <span className="badge amber">moved</span>}
+                {editingApptId === a.id ? (
+                  <div style={{ flex: 1 }} className="stack">
+                    <input className="input" value={editAppt.what} onChange={(e) => setEditAppt({ ...editAppt, what: e.target.value })} />
+                    <div className="row">
+                      <input className="input" value={editAppt.when} onChange={(e) => setEditAppt({ ...editAppt, when: e.target.value })} />
+                      <input className="input" value={editAppt.where} onChange={(e) => setEditAppt({ ...editAppt, where: e.target.value })} />
+                    </div>
+                    <div className="row">
+                      <button className="btn small primary" onClick={() => saveAppt(a.id)}>Save</button>
+                      <button className="btn small ghost" onClick={() => setEditingApptId(null)}>Cancel</button>
+                      <button className="btn small coral" onClick={() => cancelAppt(a.id, a.what || "this appointment")}>Remove</button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ flex: 1 }}>
+                      <b>{a.what || "Appointment"}</b>
+                      <div className="muted">{a.when}{a.where ? ` ∑ ${a.where}` : ""}</div>
+                    </div>
+                    {a.status === "rescheduled" && <span className="badge amber">moved</span>}
+                    {canEditPlan && (
+                      <button className="btn small ghost" onClick={() => { setEditingApptId(a.id); setEditAppt({ what: a.what, when: a.when, where: a.where }); }}>
+                        <Icon name="pencil" size={14} /> Edit
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -144,7 +214,7 @@ export default function Plan() {
                 </button>
                 <div style={{ flex: 1 }}>
                   <div style={{ textDecoration: t.status === "done" ? "line-through" : "none" }}>{t.title}</div>
-                  <div className="tiny">{t.source.startsWith("document") ? "from document" : t.source}{t.due ? ` ∑ ${t.due}` : ""}</div>
+                  <div className="tiny">{t.source.startsWith("document") ? "from document" : t.source}{t.due ? ` ù ${t.due}` : ""}</div>
                 </div>
               </div>
             ))}
