@@ -45,7 +45,11 @@ export default function Records() {
     <div>
       <div className="page-head">
         <h2>Records</h2>
-        <UploadButton onError={setError} />
+        <UploadButton className="btn primary rec-upload" onError={setError}>
+          <Icon name="scan" size={16} />
+          <span className="desktop-only">Upload document</span>
+          <span className="mobile-only">Scan</span>
+        </UploadButton>
         <input
           ref={fileRef}
           type="file"

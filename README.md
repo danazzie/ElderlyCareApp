@@ -35,13 +35,16 @@ note about the wrong patient can never be saved into the circle.
 
 ## Screenshots
 
-| Onboarding | Home (desktop) | Review with citations | Mobile |
-|---|---|---|---|
-| green hero with invitation-code entry | sidebar + 2-column dashboard | two-pane: document + extracted item cards | bottom tabs + center Ask button |
+Responsive React PWA: sidebar from 768px up, bottom tabs on the phone. Brand:
+green `#2FA36B`, coral `#F2705B`, amber `#F5B841`, ink `#15191E`.
 
-(The UI implements the design in `../UI:UX/image.png`: green `#2FA36B`, coral
-`#F2705B`, amber `#F5B841`, ink `#15191E`; responsive — sidebar layout above 768px,
-phone layout with bottom tabs below.)
+| Onboarding | Home (desktop) |
+|---|---|
+| ![Login hero — Care and peace of mind](docs/screens/01-login.jpg) | ![Home dashboard with sidebar](docs/screens/02-home-desktop.png) |
+
+| Review with citations | Mobile |
+|---|---|
+| ![Handwritten prescription review — source photo and extracted items](docs/screens/03-review.jpg) | ![Home on a phone with bottom tabs](docs/screens/04-home-mobile.png) |
 
 ## Quick start
 
