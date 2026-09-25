@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api, Doc, ExtractedItem, getToken } from "../api";
 import { useAuth } from "../auth";
+import { Icon, IconName, IconTile } from "../components/Icon";
 
-const KIND_ICON: Record<string, string> = {
-  medication: "💊", appointment: "📅", instruction: "📋", observation: "🩺", contact: "☎️",
+const KIND_ICON: Record<string, IconName> = {
+  medication: "pill", appointment: "calendar", instruction: "clipboard",
+  observation: "stethoscope", contact: "phone",
 };
 
 function ItemCard({ item, decision, onDecide, onEdit, canReview }:
@@ -18,10 +20,10 @@ function ItemCard({ item, decision, onDecide, onEdit, canReview }:
     <div className="card stack" style={{ opacity: decision === "rejected" ? 0.5 : 1 }}>
       <div className="spread">
         <div className="row">
-          <span style={{ fontSize: 20 }}>{KIND_ICON[item.kind] ?? "•"}</span>
+          <IconTile name={KIND_ICON[item.kind] ?? "file"} tone="green" size={32} iconSize={16} />
           <b>{item.payload.name ?? item.payload.what ?? item.payload.text?.slice(0, 60) ?? item.kind}</b>
         </div>
-        <span className="tiny">p.{item.source_page} · conf {Math.round(item.confidence * 100)}%</span>
+        <span className="tiny">p.{item.source_page} � conf {Math.round(item.confidence * 100)}%</span>
       </div>
       <div>
         {item.flags.map((f) => <span key={f} className={`flag ${f}`}>{f.replaceAll("_", " ")}</span>)}
@@ -29,13 +31,15 @@ function ItemCard({ item, decision, onDecide, onEdit, canReview }:
       {!editing ? (
         <div className="muted" style={{ fontSize: 13 }}>
           {Object.entries(item.payload).filter(([k]) => !["name", "what", "text"].includes(k))
-            .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`).join(" · ")}
+            .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`).join(" � ")}
           {item.payload.text && item.payload.text.length > 60 ? ` ${item.payload.text}` : ""}
         </div>
       ) : (
         <textarea className="input" rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} />
       )}
-      {item.source_quote && <div className="quote">“{item.source_quote}” <span className="cite-chip">source · p.{item.source_page}</span></div>}
+      {item.source_quote && (
+        <div className="quote">"{item.source_quote}" <span className="cite-chip">source � p.{item.source_page}</span></div>
+      )}
       {canReview && item.review_status === "pending" && (
         <div className="row">
           {!editing ? (
@@ -43,11 +47,11 @@ function ItemCard({ item, decision, onDecide, onEdit, canReview }:
               <button className={`btn small ${decision === "approved" && !blocking ? "primary" : "ghost"}`}
                 disabled={blocking}
                 title={blocking ? "Blocked until the conflict/missing field is resolved" : ""}
-                onClick={() => onDecide("approved")}>✓ Approve</button>
-              <button className="btn small ghost" onClick={() => setEditing(true)}>✎ Edit</button>
+                onClick={() => onDecide("approved")}><Icon name="check" size={14} /> Approve</button>
+              <button className="btn small ghost" onClick={() => setEditing(true)}><Icon name="pencil" size={14} /> Edit</button>
               <button className={`btn small ${decision === "rejected" ? "coral" : "ghost"}`}
-                onClick={() => onDecide("rejected")}>✕ Reject</button>
-              {blocking && <span className="tiny" style={{ color: "#c94a36" }}>blocked — edit to resolve</span>}
+                onClick={() => onDecide("rejected")}><Icon name="close" size={14} /> Reject</button>
+              {blocking && <span className="tiny" style={{ color: "var(--coral-deep)" }}>blocked  -  edit to resolve</span>}
             </>
           ) : (
             <>
@@ -107,23 +111,24 @@ export default function DocumentReview() {
 
   return (
     <div>
-      <button className="btn small ghost" onClick={() => nav("/records")} style={{ marginBottom: 12 }}>‹ Records</button>
+      <button className="btn small ghost" onClick={() => nav("/records")} style={{ marginBottom: 12 }}>
+        <Icon name="chevronLeft" size={16} /> Records
+      </button>
       <div className="spread" style={{ marginBottom: 8, flexWrap: "wrap", gap: 8 }}>
         <h2 style={{ wordBreak: "break-all" }}>{doc.filename}</h2>
         <span className={`badge ${doc.status === "approved" ? "green" : pending ? "coral" : "grey"}`}>{doc.status.replaceAll("_", " ")}</span>
       </div>
       {doc.summary && <p className="muted">{doc.summary}</p>}
       {doc.status === "rejected" && doc.reject_reason && (
-        <div className="alert-banner" style={{ marginBottom: 12 }}>{doc.reject_reason}</div>
+        <div className="alert-banner" style={{ marginBottom: 12 }}><Icon name="alert" size={16} /> {doc.reject_reason}</div>
       )}
       {issues.length > 0 && (
-        <div className="alert-banner" style={{ background: "var(--amber-soft)", borderColor: "var(--amber)", color: "#9a7112", marginBottom: 12 }}>
-          {issues.map((s, i) => <div key={i}>? {s}</div>)}
+        <div className="alert-banner" style={{ background: "var(--amber-soft)", borderColor: "var(--amber)", color: "var(--amber-deep)", marginBottom: 12 }}>
+          {issues.map((s, i) => <div key={i}><Icon name="alert" size={14} /> {s}</div>)}
         </div>
       )}
 
       <div className="grid cols-2">
-        {/* two-pane on desktop: document left, items right (per design) */}
         <div className="card" style={{ minHeight: 320 }}>
           <b>Source document</b>
           <div style={{ marginTop: 10 }}>
@@ -135,7 +140,7 @@ export default function DocumentReview() {
                 const r = await fetch(fileUrl, { headers: { Authorization: `Bearer ${getToken()}` } });
                 const blob = await r.blob();
                 window.open(URL.createObjectURL(blob), "_blank");
-              }}>Open PDF ↗</a>
+              }}><Icon name="file" size={16} /> Open PDF</a>
             )}
           </div>
         </div>
@@ -151,7 +156,7 @@ export default function DocumentReview() {
           {(doc.items ?? []).length === 0 && doc.status !== "processing" && (
             <div className="card muted">No items were extracted.</div>
           )}
-          {doc.status === "processing" && <div className="card muted"><span className="spin dark" /> Extracting…</div>}
+          {doc.status === "processing" && <div className="card muted"><span className="spin dark" /> Extracting...</div>}
         </div>
       </div>
 
@@ -161,13 +166,13 @@ export default function DocumentReview() {
             {busy ? <span className="spin" /> : Object.keys(edits).length ? "Save edits & re-check" : "Approve & update plan"}
           </button>
           <button className="btn coral" disabled={busy} onClick={() => submit("rejected")}>Reject document</button>
-          <span className="tiny">Items flagged conflict/missing stay blocked until edited — safety rule.</span>
+          <span className="tiny">Items flagged conflict/missing stay blocked until edited  -  safety rule.</span>
         </div>
       )}
       {pending && !canReview && (
         <div className="card muted" style={{ marginTop: 16 }}>Waiting for a family member (owner/member) to review. Caregivers can upload but not approve.</div>
       )}
-      {error && <div className="alert-banner" style={{ marginTop: 12 }}>{error}</div>}
+      {error && <div className="alert-banner" style={{ marginTop: 12 }}><Icon name="alert" size={16} /> {error}</div>}
     </div>
   );
 }

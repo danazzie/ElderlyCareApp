@@ -1,9 +1,8 @@
 import { useRef, useState } from "react";
 import { api, CareUpdate } from "../api";
 import { useAuth } from "../auth";
+import { Icon } from "./Icon";
 
-/** Voice care update: record (MediaRecorder) or upload an audio file ?
- * transcript + structured draft ? caregiver confirms (Graph B interrupt). */
 export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
   const { circle } = useAuth();
   const [phase, setPhase] = useState<"input" | "processing" | "review">("input");
@@ -48,7 +47,7 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
       recRef.current = rec;
       setRecording(true);
     } catch {
-      setError("Microphone unavailable — upload an audio file or type the update instead.");
+      setError("Microphone unavailable  -  upload an audio file or type the update instead.");
     }
   };
 
@@ -66,19 +65,21 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
     <div className="modal-back" onClick={onClose}>
       <div className="modal stack" onClick={(e) => e.stopPropagation()}>
         <div className="spread">
-          <h3>🎙 Voice update</h3>
-          <button className="btn small ghost" onClick={onClose}>✕</button>
+          <h3>Voice update</h3>
+          <button className="btn small ghost icon-only" onClick={onClose} aria-label="Close">
+            <Icon name="close" size={16} />
+          </button>
         </div>
 
         {phase === "input" && (
           <>
-            <p className="muted">Record what happened during the visit — meals, medications given,
+            <p className="muted">Record what happened during the visit  -  meals, medications given,
               vitals, mood. Ahtama structures it for the family.</p>
-            <button className={`rec-btn${recording ? " recording" : ""}`} onClick={toggleRecord}>
-              {recording ? "■" : "🎤"}
+            <button className={`rec-btn${recording ? " recording" : ""}`} onClick={toggleRecord} aria-label={recording ? "Stop" : "Record"}>
+              <Icon name={recording ? "stop" : "mic"} size={32} />
             </button>
             <div className="tiny" style={{ textAlign: "center" }}>
-              {recording ? "Recording… tap to stop" : "Tap to record"}
+              {recording ? "Recording... tap to stop" : "Tap to record"}
             </div>
             <div className="row" style={{ justifyContent: "center", gap: 14 }}>
               <label className="btn small ghost">
@@ -90,38 +91,40 @@ export default function VoiceModal({ onClose, onSaved }: { onClose: () => void; 
                   }} />
               </label>
             </div>
-            <textarea className="input" rows={2} placeholder="…or type the update"
+            <textarea className="input" rows={2} placeholder="...or type the update"
               value={text} onChange={(e) => setText(e.target.value)} />
             {text.trim() && <button className="btn primary" onClick={() => submit(null, "")}>Process text update</button>}
-            {error && <div className="alert-banner">{error}</div>}
+            {error && <div className="alert-banner"><Icon name="alert" size={16} /> {error}</div>}
           </>
         )}
 
         {phase === "processing" && (
-          <div className="empty"><span className="spin dark" /> <div>Transcribing and structuring…</div></div>
+          <div className="empty"><span className="spin dark" /> <div>Transcribing and structuring...</div></div>
         )}
 
         {phase === "review" && draft && (
           <>
             {draft.red_flags.length > 0 && (
-              <div className="alert-banner">⚠ {draft.red_flags.join(" · ")}</div>
+              <div className="alert-banner"><Icon name="alert" size={16} /> {draft.red_flags.join(" � ")}</div>
             )}
-            <div className="quote">“{draft.transcript}”</div>
+            <div className="quote">"{draft.transcript}"</div>
             <div className="stack" style={{ gap: 6 }}>
-              {s.meals && <div><b>🍽 Meals:</b> {s.meals}</div>}
+              {s.meals && <div className="row"><Icon name="utensils" size={16} /> <b>Meals:</b> {s.meals}</div>}
               {(s.medications_given ?? []).length > 0 && (
-                <div><b>💊 Medications:</b>{" "}
+                <div className="row"><Icon name="pill" size={16} /> <b>Medications:</b>{" "}
                   {(s.medications_given as any[]).map((m) => `${m.what} (${m.time})`).join(", ")}</div>
               )}
               {Object.keys(s.vitals ?? {}).length > 0 && (
-                <div><b>🩺 Vitals:</b> {Object.entries(s.vitals).map(([k, v]) => `${k} ${v}`).join(", ")}</div>
+                <div className="row"><Icon name="stethoscope" size={16} /> <b>Vitals:</b> {Object.entries(s.vitals).map(([k, v]) => `${k} ${v}`).join(", ")}</div>
               )}
-              {s.mood && <div><b>🙂 Mood:</b> {s.mood}</div>}
-              {(s.incidents ?? []).length > 0 && <div><b>❗ Incidents:</b> {(s.incidents as string[]).join("; ")}</div>}
+              {s.mood && <div className="row"><Icon name="smile" size={16} /> <b>Mood:</b> {s.mood}</div>}
+              {(s.incidents ?? []).length > 0 && (
+                <div className="row"><Icon name="circleAlert" size={16} /> <b>Incidents:</b> {(s.incidents as string[]).join("; ")}</div>
+              )}
               {s.has_care_facts === false && <div className="muted">No care facts detected in this note.</div>}
             </div>
             {clarifications.length > 0 && (
-              <div className="alert-banner" style={{ background: "var(--amber-soft)", borderColor: "var(--amber)", color: "#9a7112" }}>
+              <div className="alert-banner" style={{ background: "var(--amber-soft)", borderColor: "var(--amber)", color: "var(--amber-deep)" }}>
                 {clarifications.join(" ")}
               </div>
             )}

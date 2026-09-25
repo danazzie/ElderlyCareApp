@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, Plan as PlanT } from "../api";
 import { useAuth } from "../auth";
+import { Icon, IconTile } from "../components/Icon";
 
 export default function Plan() {
   const { circle } = useAuth();
@@ -20,12 +21,12 @@ export default function Plan() {
       </p>
       <div className="grid cols-2">
         <div className="stack">
-          <div className="section-title">💊 Medications</div>
+          <div className="section-title">Medications</div>
           <div className="card">
             {plan.medications.length === 0 && <div className="muted">No approved medications yet.</div>}
             {plan.medications.map((m) => (
               <div className="list-item" key={m.id}>
-                <div className="avatar">💊</div>
+                <IconTile name="pill" tone="green" />
                 <div style={{ flex: 1 }}>
                   <b>{m.name}</b> <span className="muted">{m.dose}</span>
                   <div className="tiny">{m.schedule}</div>
@@ -34,15 +35,15 @@ export default function Plan() {
             ))}
           </div>
 
-          <div className="section-title">📅 Appointments</div>
+          <div className="section-title">Appointments</div>
           <div className="card">
             {plan.appointments.length === 0 && <div className="muted">No appointments yet.</div>}
             {plan.appointments.map((a) => (
               <div className="list-item" key={a.id}>
-                <div className="avatar amber">📅</div>
+                <IconTile name="calendar" tone="amber" />
                 <div style={{ flex: 1 }}>
                   <b>{a.what || "Appointment"}</b>
-                  <div className="muted">{a.when}{a.where ? ` · ${a.where}` : ""}</div>
+                  <div className="muted">{a.when}{a.where ? ` � ${a.where}` : ""}</div>
                 </div>
                 {a.status === "rescheduled" && <span className="badge amber">moved</span>}
               </div>
@@ -51,10 +52,10 @@ export default function Plan() {
         </div>
 
         <div className="stack">
-          <div className="section-title">✅ Tasks & instructions</div>
+          <div className="section-title">Tasks and instructions</div>
           <div className="card">
             <div className="row" style={{ marginBottom: 8 }}>
-              <input className="input" placeholder="Add a task…" value={newTask}
+              <input className="input" placeholder="Add a task..." value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && newTask.trim() && circle) {
@@ -65,10 +66,12 @@ export default function Plan() {
             {plan.tasks.map((t) => (
               <div className="list-item" key={t.id}>
                 <button className={`check${t.status === "done" ? " done" : ""}`}
-                  onClick={() => api.toggleTask(t.id).then(load)}>✓</button>
+                  onClick={() => api.toggleTask(t.id).then(load)}>
+                  <Icon name="check" size={13} stroke={2.5} />
+                </button>
                 <div style={{ flex: 1 }}>
                   <div style={{ textDecoration: t.status === "done" ? "line-through" : "none" }}>{t.title}</div>
-                  <div className="tiny">{t.source.startsWith("document") ? "from document" : t.source}{t.due ? ` · ${t.due}` : ""}</div>
+                  <div className="tiny">{t.source.startsWith("document") ? "from document" : t.source}{t.due ? ` � ${t.due}` : ""}</div>
                 </div>
               </div>
             ))}
