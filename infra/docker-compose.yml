@@ -8,14 +8,14 @@ services:
     env_file:
       - ../.env
     volumes:
-      - ahtama-data:/app/data
+      - ihtama-data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
       interval: 30s
       timeout: 5s
       retries: 3
 
-  # Ahtama MCP server over stdio is run by the client (Claude Desktop);
+  # Ihtama MCP server over stdio is run by the client (Claude Desktop);
   # for HTTP transport uncomment:
   # mcp:
   #   build: { context: .., dockerfile: infra/Dockerfile }
@@ -23,4 +23,4 @@ services:
   #   environment: [ "MCP_TRANSPORT=streamable-http" ]
 
 volumes:
-  ahtama-data:
+  ihtama-data:

@@ -1,4 +1,4 @@
-"""Graph C — Ask Ahtama (Q&A over approved records with citations).
+"""Graph C — Ask Ihtama (Q&A over approved records with citations).
 
 input_guardrail ??(blocked)??? refuse -> END
        ?
@@ -74,7 +74,7 @@ def safe_redirect(state: AskState) -> AskState:
 
 
 def polite_decline(state: AskState) -> AskState:
-    return {"answer": "I'm Ahtama, the family care assistant — I can answer questions about the care "
+    return {"answer": "I'm Ihtama, the family care assistant — I can answer questions about the care "
                       "record, plan, documents and updates. That one is outside what I do.",
             "citations": []}
 

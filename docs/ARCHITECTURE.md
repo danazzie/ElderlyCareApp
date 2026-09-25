@@ -1,4 +1,4 @@
-# Ahtama — Architecture
+# Ihtama — Architecture
 
 ## System overview
 
@@ -15,7 +15,7 @@
           +-------------------+-----+------------------+
           v                   v                        v
  +----------------+  +----------------------+  +-------------------------+
- | Core services  |  |  LangGraph graphs    |  |  Ahtama MCP server      |
+ | Core services  |  |  LangGraph graphs    |  |  Ihtama MCP server      |
  | circles, plan, |  |  A: document->plan   |  |  get_care_record        |
  | tasks, audit   |  |  B: voice update     |  |  search_care_documents  |
  +-------+--------+  |  C: ask w/ guardrail |  |  propose_care_plan_ch.  |

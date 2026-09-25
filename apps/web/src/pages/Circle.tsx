@@ -57,7 +57,7 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
               <IconTile name={ic.name} tone={ic.tone} />
               <div style={{ flex: 1 }}>
                 <b>{e.actor}</b> <span className="muted">{e.action.replaceAll("_", " ")}</span>
-                <div className="tiny">{new Date(e.at).toLocaleString()} · {e.entity}</div>
+                <div className="tiny">{new Date(e.at).toLocaleString()} Â· {e.entity}</div>
               </div>
             </div>
           );
@@ -113,11 +113,11 @@ export default function Circle({ activityOnly = false }: { activityOnly?: boolea
           )}
           <div className="card stack">
             <b>Recipient profile</b>
-            <div className="muted">{circle.recipient_name} · b. {circle.recipient_dob || " - "}</div>
+            <div className="muted">{circle.recipient_name} Â· b. {circle.recipient_dob || " - "}</div>
             <div className="muted">{circle.recipient_notes}</div>
             <div className="tiny">
-              Consent recorded: {circle.consent_recorded_at ? new Date(circle.consent_recorded_at).toLocaleDateString() : "not yet"} ·
-              Ahtama never gives medical advice  -  emergencies: call your local emergency number.
+              Consent recorded: {circle.consent_recorded_at ? new Date(circle.consent_recorded_at).toLocaleDateString() : "not yet"} Â·
+              Ihtama never gives medical advice  -  emergencies: call your local emergency number.
             </div>
           </div>
         </div>

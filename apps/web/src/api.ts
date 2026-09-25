@@ -3,11 +3,11 @@
 const BASE = "/api";
 
 export function getToken(): string | null {
-  return localStorage.getItem("ahtama_token");
+  return localStorage.getItem("ihtama_token");
 }
 export function setToken(t: string | null) {
-  if (t) localStorage.setItem("ahtama_token", t);
-  else localStorage.removeItem("ahtama_token");
+  if (t) localStorage.setItem("ihtama_token", t);
+  else localStorage.removeItem("ihtama_token");
 }
 
 async function req<T>(path: string, options: RequestInit = {}): Promise<T> {

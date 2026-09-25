@@ -8,11 +8,11 @@ DATA_DIR = REPO_ROOT / "data"
 
 
 class Settings(BaseSettings):
-    app_name: str = "Ahtama API"
+    app_name: str = "Ihtama API"
     secret_key: str = "dev-only-secret-key-change-in-production-0123456789"
     access_token_expire_minutes: int = 60 * 24 * 7
 
-    database_url: str = f"sqlite:///{DATA_DIR / 'ahtama.db'}"
+    database_url: str = f"sqlite:///{DATA_DIR / 'ihtama.db'}"
     upload_dir: Path = DATA_DIR / "uploads"
     chroma_dir: Path = DATA_DIR / "chroma"
     checkpoint_db: Path = DATA_DIR / "checkpoints.db"
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     extraction_model: str = "gpt-4o"          # vision-capable frontier model: only place we need it
     fast_model: str = "gpt-4o-mini"           # classification, structuring, digest
-    answer_model: str = "gpt-4o-mini"         # Ask Ahtama answers (A/B tested vs gpt-4o)
+    answer_model: str = "gpt-4o-mini"         # Ask Ihtama answers (A/B tested vs gpt-4o)
     transcribe_model: str = "whisper-1"
     embedding_model: str = "text-embedding-3-small"
     temperature: float = 0.0                  # extraction/classification: determinism first
@@ -37,10 +37,10 @@ class Settings(BaseSettings):
 
     langchain_tracing_v2: str = ""
     langchain_api_key: str = ""
-    langchain_project: str = "ahtama"
+    langchain_project: str = "ihtama"
 
     class Config:
-        env_file = ".env"
+        env_file = str(REPO_ROOT / ".env")
         extra = "ignore"
 
 

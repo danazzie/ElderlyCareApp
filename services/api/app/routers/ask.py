@@ -1,4 +1,4 @@
-"""Ask Ahtama — Q&A over the approved care record (Graph C)."""
+"""Ask Ihtama — Q&A over the approved care record (Graph C)."""
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session

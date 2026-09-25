@@ -3,18 +3,22 @@ They double as the CI smoke suite (no API keys, no spend)."""
 import io
 import os
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 
 # isolated data dir per test session, configured before the app is imported
-_tmp = tempfile.mkdtemp(prefix="ahtama-test-")
+_tmp = tempfile.mkdtemp(prefix="ihtama-test-")
 os.environ["DATABASE_URL"] = f"sqlite:///{_tmp}/test.db"
 os.environ["UPLOAD_DIR"] = f"{_tmp}/uploads"
 os.environ["CHROMA_DIR"] = f"{_tmp}/chroma"
 os.environ["CHECKPOINT_DB"] = f"{_tmp}/checkpoints.db"
 os.environ["OPENAI_API_KEY"] = ""  # force demo mode
+os.environ["ANTHROPIC_API_KEY"] = ""
+os.environ["LANGCHAIN_TRACING_V2"] = ""
+os.environ["LANGCHAIN_API_KEY"] = ""
 
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -22,7 +26,10 @@ from app.main import app  # noqa: E402
 
 client = TestClient(app)
 REPO_ROOT = Path(__file__).resolve().parents[3]
-SAMPLES = REPO_ROOT.parent / "Sample documents"
+sys.path.insert(0, str(REPO_ROOT / "evals"))
+from samples_path import sample_documents_dir  # noqa: E402
+
+SAMPLES = sample_documents_dir(REPO_ROOT)
 
 
 def login(email: str) -> dict:
@@ -33,12 +40,12 @@ def login(email: str) -> dict:
 
 @pytest.fixture(scope="module")
 def owner():
-    return login("danagul@ahtama.demo")
+    return login("danagul@ihtama.demo")
 
 
 @pytest.fixture(scope="module")
 def caregiver():
-    return login("fatima@ahtama.demo")
+    return login("fatima@ihtama.demo")
 
 
 @pytest.fixture(scope="module")

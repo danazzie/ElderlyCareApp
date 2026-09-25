@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ahtama eval runner.
+"""Ihtama eval runner.
 
 Runs the golden dataset (15 extraction + 9 voice + 15 Q&A = 39 cases) against the
 real application stack (FastAPI in-process, real graphs, real RAG index) in an
@@ -29,17 +29,26 @@ import tempfile
 import time
 from pathlib import Path
 
+from samples_path import sample_documents_dir  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SAMPLES = REPO_ROOT.parent / "Sample documents"
+SAMPLES = sample_documents_dir(REPO_ROOT)
 REPORTS = REPO_ROOT / "evals" / "reports"
 GOLDEN = REPO_ROOT / "evals" / "golden"
 
 # isolated environment BEFORE importing the app
-_tmp = tempfile.mkdtemp(prefix="ahtama-evals-")
+_tmp = tempfile.mkdtemp(prefix="ihtama-evals-")
 os.environ.setdefault("DATABASE_URL", f"sqlite:///{_tmp}/evals.db")
 os.environ.setdefault("UPLOAD_DIR", f"{_tmp}/uploads")
 os.environ.setdefault("CHROMA_DIR", f"{_tmp}/chroma")
 os.environ.setdefault("CHECKPOINT_DB", f"{_tmp}/checkpoints.db")
+# Smoke / GitHub Actions must stay offline even if a developer .env is present.
+_force_demo = "--smoke" in sys.argv or os.environ.get("CI") == "true"
+if _force_demo and os.environ.get("IHTAMA_LIVE_EVALS") != "1":
+    os.environ["OPENAI_API_KEY"] = ""
+    os.environ["ANTHROPIC_API_KEY"] = ""
+    os.environ["LANGCHAIN_TRACING_V2"] = ""
+    os.environ["LANGCHAIN_API_KEY"] = ""
 sys.path.insert(0, str(REPO_ROOT / "services" / "api"))
 sys.path.insert(0, str(REPO_ROOT / "evals"))
 
@@ -211,7 +220,7 @@ def write_report(tag, summary, extraction, voice, qa):
     out = REPORTS / f"report-{stamp}{tag}"
     out.with_suffix(".json").write_text(json.dumps(
         {"summary": summary, "extraction": extraction, "voice": voice, "qa": qa}, indent=2))
-    lines = [f"# Ahtama eval report {stamp}{tag}", "",
+    lines = [f"# Ihtama eval report {stamp}{tag}", "",
              f"Mode: {'OFFLINE DEMO (deterministic fixtures)' if DEMO_MODE else 'LIVE (OpenAI)'}", "",
              "| Metric | Value |", "|---|---|"]
     lines += [f"| {k} | {v} |" for k, v in summary.items()]
@@ -235,8 +244,8 @@ def main():
         voice_cases = [c for c in voice_cases if c["id"] in {"vox-01", "vox-05"}]
         qa_cases = [c for c in qa_cases if c["id"] in {"qa-01", "qa-09", "qa-13", "qa-08"}]
 
-    owner = login("danagul@ahtama.demo")
-    caregiver = login("fatima@ahtama.demo")
+    owner = login("danagul@ihtama.demo")
+    caregiver = login("fatima@ihtama.demo")
     circle_id = client.get("/api/circles", headers=owner).json()[0]["id"]
 
     print(f"\n=== Extraction ({len(extraction_cases)} cases) ===")

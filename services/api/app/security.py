@@ -17,7 +17,7 @@ bearer = HTTPBearer(auto_error=False)
 
 
 def hash_password(password: str) -> str:
-    salt = "ahtama-static-salt"  # per-user salt in production; kept simple for the course demo
+    salt = "ihtama-static-salt"  # per-user salt in production; kept simple for the course demo
     return hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100_000).hex()
 
 
