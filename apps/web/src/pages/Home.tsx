@@ -5,6 +5,7 @@ import { useAuth } from "../auth";
 import VoiceModal from "../components/VoiceModal";
 import { Icon, IconTile } from "../components/Icon";
 import { EmptyArt } from "../components/Illustration";
+import UploadButton from "../components/UploadButton";
 
 function Ring({ done, total }: { done: number; total: number }) {
   const pct = total ? done / total : 0;
@@ -53,9 +54,7 @@ export default function Home() {
           <button className="btn primary" onClick={() => setVoice(true)}>
             <Icon name="mic" size={17} /> Voice update
           </button>
-          <button className="btn ghost" onClick={() => nav("/records?upload=1")}>
-            <Icon name="upload" size={17} /> Upload document
-          </button>
+          <UploadButton className="btn ghost" />
           <a className="btn icon-only coral" href="tel:999" aria-label="Emergency">
             <Icon name="circleAlert" size={18} />
           </a>
@@ -100,8 +99,9 @@ export default function Home() {
           <div className="quick-actions">
             <button className="qa-btn" onClick={() => setVoice(true)}>
               <span className="icon icon-tile green"><Icon name="mic" size={19} /></span>Voice</button>
-            <button className="qa-btn" onClick={() => nav("/records?upload=1")}>
-              <span className="icon icon-tile amber"><Icon name="scan" size={19} /></span>Scan</button>
+            <UploadButton className="qa-btn">
+              <span className="icon icon-tile amber"><Icon name="scan" size={19} /></span>Scan
+            </UploadButton>
             <button className="qa-btn" onClick={() => nav("/ask")}>
               <span className="icon icon-tile green"><Icon name="sparkles" size={19} /></span>Ask</button>
             <a className="qa-btn" href="tel:999">
@@ -180,7 +180,7 @@ export default function Home() {
                 <IconTile name="calendar" tone="amber" />
                 <div>
                   <b>{today.next_appointment.what}</b>
-                  <div className="muted">{today.next_appointment.when}{today.next_appointment.where ? ` ù ${today.next_appointment.where}` : ""}</div>
+                  <div className="muted">{today.next_appointment.when}{today.next_appointment.where ? ` ¬∑ ${today.next_appointment.where}` : ""}</div>
                 </div>
               </div>
             ) : <div className="muted">Nothing scheduled.</div>}

@@ -54,4 +54,7 @@ if WEB_DIST.exists():
         candidate = WEB_DIST / full_path
         if full_path and candidate.is_file():
             return FileResponse(candidate)
-        return FileResponse(WEB_DIST / "index.html")
+        return FileResponse(
+            WEB_DIST / "index.html",
+            headers={"Cache-Control": "no-cache"},
+        )

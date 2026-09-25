@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api, Doc } from "../api";
 import { useAuth } from "../auth";
 import { Icon, IconTile } from "../components/Icon";
 import { EmptyArt } from "../components/Illustration";
+import UploadButton, { uploadCareDocument } from "../components/UploadButton";
 
 const STATUS_BADGE: Record<string, { cls: string; label: string }> = {
   processing: { cls: "grey", label: "processing..." },
@@ -15,8 +16,8 @@ const STATUS_BADGE: Record<string, { cls: string; label: string }> = {
 
 export default function Records() {
   const { circle } = useAuth();
+  const nav = useNavigate();
   const [docs, setDocs] = useState<Doc[]>([]);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const [params] = useSearchParams();
@@ -28,29 +29,35 @@ export default function Records() {
     return () => clearInterval(iv);
   }, [circle?.id]);
 
-  useEffect(() => {
-    if (params.get("upload")) fileRef.current?.click();
-  }, []);
-
   const upload = async (file: File) => {
-    if (!circle) return;
-    setUploading(true); setError("");
+    if (!circle) {
+      setError("No care circle is selected.");
+      return;
+    }
+    setError("");
     try {
-      await api.uploadDocument(circle.id, file);
-      load();
+      const r = await uploadCareDocument(circle.id, file);
+      nav(`/records/${r.id}`);
     } catch (e: any) { setError(e.message); }
-    setUploading(false);
   };
 
   return (
     <div>
-      <div className="spread" style={{ marginBottom: 14 }}>
+      <div className="page-head">
         <h2>Records</h2>
-        <label className="btn primary">
-          {uploading ? <span className="spin" /> : <><Icon name="upload" size={16} /> Upload document</>}
-          <input ref={fileRef} type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.webp"
-            onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = ""; }} />
-        </label>
+        <UploadButton onError={setError} />
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void upload(f);
+            e.target.value = "";
+          }}
+        />
       </div>
       <p className="muted" style={{ marginTop: -8 }}>
         Photograph or upload discharge letters, prescriptions and notes. Ihtama extracts medications,
@@ -60,11 +67,17 @@ export default function Records() {
 
       <div
         className="card empty dropzone"
-        style={{ marginBottom: 14 }}
+        style={{ marginBottom: 14, cursor: "pointer" }}
+        role="button"
+        tabIndex={0}
+        onClick={() => fileRef.current?.click()}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") fileRef.current?.click(); }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) upload(f); }}>
         <EmptyArt />
-        Drag a PDF or photo here, or use the upload button
+        {params.get("upload")
+          ? "Choose a PDF or photo to upload"
+          : "Drag a PDF or photo here, or click to upload"}
       </div>
 
       <div className="stack">
