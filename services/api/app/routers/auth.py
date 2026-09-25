@@ -3,7 +3,7 @@ from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
 
 from ..db import get_db
-from ..models import Membership, User
+from ..models import CareCircle, Membership, User
 from ..security import create_token, current_user, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -22,9 +22,20 @@ class LoginIn(BaseModel):
 
 def _user_out(user: User, db: Session) -> dict:
     memberships = db.query(Membership).filter(Membership.user_id == user.id).all()
+    pending = []
+    for m in memberships:
+        if m.status != "pending":
+            continue
+        circle = db.get(CareCircle, m.circle_id)
+        pending.append({
+            "circle_id": m.circle_id, "role": m.role, "status": "pending",
+            "recipient_name": circle.recipient_name if circle else "",
+        })
     return {
         "id": user.id, "email": user.email, "name": user.name, "locale": user.locale,
-        "memberships": [{"circle_id": m.circle_id, "role": m.role} for m in memberships],
+        "memberships": [{"circle_id": m.circle_id, "role": m.role, "status": m.status}
+                        for m in memberships if m.status == "active"],
+        "pending_joins": pending,
     }
 
 

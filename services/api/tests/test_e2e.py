@@ -269,6 +269,43 @@ def test_ask_clear_messages(owner, circle_id):
     assert client.get(f"/api/circles/{circle_id}/messages", headers=owner).json() == []
 
 
+def test_join_requires_family_approval_and_caregiver_can_be_removed(owner, circle_id):
+    client.post("/api/auth/register",
+                json={"email": "newcarer@x.dev", "name": "New Carer", "password": "demo1234"})
+    carer = login("newcarer@x.dev")
+    r = client.post("/api/circles/join", headers=carer,
+                    json={"invite_code": "AHMED123", "role": "caregiver"})
+    assert r.status_code == 200
+    assert r.json()["join_status"] == "pending"
+    assert client.get(f"/api/circles/{circle_id}/plan", headers=carer).status_code == 403
+    pending = client.get(f"/api/circles/{circle_id}", headers=owner).json()["pending_members"]
+    assert any(p["email"] == "newcarer@x.dev" for p in pending)
+    new_id = next(p["user_id"] for p in pending if p["email"] == "newcarer@x.dev")
+    r = client.post(f"/api/circles/{circle_id}/memberships/{new_id}/review",
+                    headers=owner, json={"action": "approved"})
+    assert r.json()["status"] == "active"
+    assert client.get(f"/api/circles/{circle_id}/plan", headers=carer).status_code == 200
+    r = client.post(f"/api/circles/{circle_id}/memberships/{new_id}/remove", headers=owner)
+    assert r.json()["status"] == "removed"
+    assert client.get(f"/api/circles/{circle_id}/plan", headers=carer).status_code == 403
+
+
+def test_manual_medication_edit(owner, caregiver, circle_id):
+    r = client.post(f"/api/circles/{circle_id}/medications", headers=owner,
+                    json={"name": "Ramipril", "dose": "5 mg", "schedule": "morning"})
+    assert r.status_code == 200, r.text
+    med_id = r.json()["id"]
+    r = client.patch(f"/api/medications/{med_id}", headers=owner,
+                     json={"name": "Ramipril", "dose": "2.5 mg", "schedule": "morning"})
+    assert r.json()["dose"] == "2.5 mg"
+    assert client.post(f"/api/circles/{circle_id}/medications", headers=caregiver,
+                       json={"name": "Ibuprofen", "dose": "200 mg"}).status_code == 403
+    r = client.post(f"/api/medications/{med_id}/stop", headers=owner)
+    assert r.status_code == 200
+    names = {m["name"].lower() for m in client.get(f"/api/circles/{circle_id}/plan", headers=owner).json()["medications"]}
+    assert "ramipril" not in names
+
+
 def test_audit_log(owner, circle_id):
     events = client.get(f"/api/circles/{circle_id}/audit", headers=owner).json()
     actions = {e["action"] for e in events}

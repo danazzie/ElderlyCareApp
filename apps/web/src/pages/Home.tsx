@@ -61,6 +61,11 @@ export default function Home() {
         </div>
       </div>
 
+      {(today.join_requests ?? []).length > 0 && ["owner", "member"].includes(role) && (
+        <div className="alert-banner" style={{ marginBottom: 14, background: "var(--amber-soft)", borderColor: "var(--amber)", color: "var(--amber-deep)" }}>
+          <Icon name="users" size={16} /> {today.join_requests!.length} join request{today.join_requests!.length === 1 ? "" : "s"} waiting  -  <Link to="/circle">review on Circle</Link>
+        </div>
+      )}
       {today.alerts.length > 0 && (
         <div className="alert-banner" style={{ marginBottom: 14 }}>
           <Icon name="alert" size={16} /> {today.alerts[0]}

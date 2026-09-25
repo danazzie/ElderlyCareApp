@@ -57,7 +57,7 @@ export default function Login() {
                   <option value="member">I'm family (member)</option>
                   <option value="caregiver">I'm a caregiver</option>
                 </select>
-                <p className="tiny">Sign in first, then the code is applied.</p>
+                <p className="tiny">Sign in first. Family must approve before you can see the record.</p>
               </>
             )}
             {mode === "register" ? (
