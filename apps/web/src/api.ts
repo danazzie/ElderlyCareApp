@@ -23,7 +23,11 @@ async function req<T>(path: string, options: RequestInit = {}): Promise<T> {
   }
   if (!r.ok) {
     const body = await r.json().catch(() => ({}));
-    throw new Error(body.detail || `Request failed (${r.status})`);
+    const detail = body.detail;
+    const message = Array.isArray(detail)
+      ? detail.map((d: any) => d.msg || JSON.stringify(d)).join("; ")
+      : (typeof detail === "string" ? detail : detail ? JSON.stringify(detail) : `Request failed (${r.status})`);
+    throw new Error(message);
   }
   return r.json();
 }
