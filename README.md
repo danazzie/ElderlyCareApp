@@ -13,26 +13,6 @@ Built as the LLM Engineering course final project. Positioning rule: Ihtama neve
 diagnoses, never changes medication, never gives clinical advice — it always
 redirects those questions to the doctor while showing what the record says.
 
-## The golden path (demo scenario)
-
-1. **Danagul (owner)** creates a care circle for her father Ahmed, invites her sister
-   Aisha (member) and caregiver Fatima (caregiver) with a code.
-2. She uploads a **discharge letter** -> Ihtama extracts medications, appointments and
-   instructions, each with a page citation -> she reviews and **approves** -> the shared
-   care plan updates.
-3. **Fatima** records a 20-second **voice note** after the morning visit -> transcript ->
-   structured update (meals, meds given, BP, mood) -> she confirms -> the circle sees it.
-4. **Aisha** asks *"What did the doctor say about the follow-up?"* -> answer with a
-   citation chip that opens the source.
-5. Aisha asks *"Should we increase the blood-pressure pills?"* -> Ihtama **declines**,
-   shows the recorded instruction and suggests asking the doctor.
-6. Every action lands in the **audit log** — who added, approved, changed what.
-
-Edge cases are first-class: conflicting doses are **blocked from approval**, missing
-fields are never inferred, brand/generic duplicates are flagged for the pharmacist,
-utility bills are politely rejected, blurry photos ask for a better shot, and a voice
-note about the wrong patient can never be saved into the circle.
-
 ## Screenshots
 
 Responsive React PWA: sidebar from 768px up, bottom tabs on the phone. Brand:
